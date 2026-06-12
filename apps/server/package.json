@@ -14,6 +14,7 @@
     "@hono/zod-openapi": "^1.4.0",
     "@midas/auth": "workspace:*",
     "@midas/db": "workspace:*",
+    "drizzle-orm": "^0.45.1",
     "@midas/env": "workspace:*",
     "@scalar/hono-api-reference": "^0.11.3",
     "better-auth": "catalog:",
