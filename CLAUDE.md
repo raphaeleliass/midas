@@ -70,6 +70,10 @@ NODE_ENV=development
 NEXT_PUBLIC_SERVER_URL=  # e.g. http://localhost:3000
 ```
 
+## Commits
+
+Nunca adicionar linhas de co-autoria do Claude (`Co-Authored-By`) nas mensagens de commit. Apenas título e descrição objetivos.
+
 ## Code style
 
 Biome enforces the following (run `pnpm check` to auto-fix):
