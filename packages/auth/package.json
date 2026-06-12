@@ -1,0 +1,24 @@
+{
+  "name": "@midas/auth",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {},
+  "dependencies": {
+    "@midas/db": "workspace:*",
+    "@midas/env": "workspace:*",
+    "better-auth": "catalog:",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@midas/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}

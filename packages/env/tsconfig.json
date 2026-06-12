@@ -1,0 +1,3 @@
+{
+  "extends": "@midas/config/tsconfig.base.json"
+}
