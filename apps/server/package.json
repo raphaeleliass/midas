@@ -11,9 +11,11 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.14.4",
+    "@hono/zod-openapi": "^1.4.0",
     "@midas/auth": "workspace:*",
     "@midas/db": "workspace:*",
     "@midas/env": "workspace:*",
+    "@scalar/hono-api-reference": "^0.11.3",
     "better-auth": "catalog:",
     "dotenv": "catalog:",
     "hono": "^4.8.2",

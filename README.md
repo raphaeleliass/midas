@@ -1,103 +1,151 @@
-# midas
+<h1 align="center">
+  <br />
+  Midas
+  <br />
+</h1>
 
-This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack that combines Next.js, Hono, and more.
+<p align="center">
+  Organize suas finanças com clareza e controle total sobre o seu dinheiro.
+</p>
 
-## Features
+<p align="center">
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white" />
+  <img alt="Next.js" src="https://img.shields.io/badge/Next.js_16-000000?style=flat-square&logo=nextdotjs&logoColor=white" />
+  <img alt="Hono" src="https://img.shields.io/badge/Hono-E36002?style=flat-square&logo=hono&logoColor=white" />
+  <img alt="Drizzle ORM" src="https://img.shields.io/badge/Drizzle_ORM-C5F74F?style=flat-square&logo=drizzle&logoColor=black" />
+  <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white" />
+  <img alt="Tailwind CSS" src="https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white" />
+  <img alt="Turborepo" src="https://img.shields.io/badge/Turborepo-EF4444?style=flat-square&logo=turborepo&logoColor=white" />
+</p>
 
-- **TypeScript** - For type safety and improved developer experience
-- **Next.js** - Full-stack React framework
-- **TailwindCSS** - Utility-first CSS for rapid UI development
-- **Shared UI package** - shadcn/ui primitives live in `packages/ui`
-- **Hono** - Lightweight, performant server framework
-- **Node.js** - Runtime environment
-- **Drizzle** - TypeScript-first ORM
-- **PostgreSQL** - Database engine
-- **Authentication** - Better-Auth
-- **Biome** - Linting and formatting
-- **Turborepo** - Optimized monorepo build system
+---
 
-## Getting Started
+## Sobre o projeto
 
-First, install the dependencies:
+**Midas** é um organizador de finanças pessoais que oferece uma visão clara e centralizada da sua vida financeira. Com autenticação segura, dashboard interativo e uma arquitetura moderna, o projeto foi construído com foco em escalabilidade e experiência do desenvolvedor.
+
+O nome é uma referência ao Rei Midas da mitologia grega — aquele que transformava tudo em ouro.
+
+## Stack
+
+| Camada | Tecnologia |
+|--------|------------|
+| **Frontend** | Next.js 16, TailwindCSS v4, shadcn/ui |
+| **Backend** | Hono (Node.js) |
+| **Banco de dados** | PostgreSQL via Neon (serverless) |
+| **ORM** | Drizzle ORM |
+| **Autenticação** | Better Auth |
+| **Monorepo** | Turborepo + pnpm |
+| **Qualidade de código** | Biome (lint + format) |
+
+## Estrutura do projeto
+
+```
+midas/
+├── apps/
+│   ├── web/          # Frontend — Next.js (porta 3001)
+│   └── server/       # Backend API — Hono (porta 3000)
+│
+└── packages/
+    ├── ui/           # Componentes shadcn/ui compartilhados
+    ├── auth/         # Configuração do Better Auth
+    ├── db/           # Schema Drizzle + cliente do banco
+    ├── env/          # Variáveis de ambiente tipadas (t3-env)
+    └── config/       # tsconfig base compartilhado
+```
+
+## Pré-requisitos
+
+- [Node.js](https://nodejs.org/) 20+
+- [pnpm](https://pnpm.io/) 10+
+- Banco de dados PostgreSQL (recomendado: [Neon](https://neon.tech))
+
+## Primeiros passos
+
+**1. Clone e instale as dependências**
 
 ```bash
+git clone https://github.com/raphaeleliass/midas.git
+cd midas
 pnpm install
 ```
 
-## Database Setup
+**2. Configure as variáveis de ambiente**
 
-This project uses PostgreSQL with Drizzle ORM.
+Crie `apps/server/.env`:
 
-1. Make sure you have a PostgreSQL database set up.
-2. Update your `apps/server/.env` file with your PostgreSQL connection details.
-
-3. Apply the schema to your database:
-
-```bash
-pnpm run db:push
+```env
+DATABASE_URL=
+BETTER_AUTH_SECRET=    # string aleatória com pelo menos 32 caracteres
+BETTER_AUTH_URL=       # http://localhost:3000
+CORS_ORIGIN=           # http://localhost:3001
+NODE_ENV=development
 ```
 
-Then, run the development server:
+Crie `apps/web/.env`:
 
-```bash
-pnpm run dev
+```env
+NEXT_PUBLIC_SERVER_URL=http://localhost:3000
 ```
 
-Open [http://localhost:3001](http://localhost:3001) in your browser to see the web application.
-The API is running at [http://localhost:3000](http://localhost:3000).
-
-## UI Customization
-
-React web apps in this stack share shadcn/ui primitives through `packages/ui`.
-
-- Change design tokens and global styles in `packages/ui/src/styles/globals.css`
-- Update shared primitives in `packages/ui/src/components/*`
-- Adjust shadcn aliases or style config in `packages/ui/components.json` and `apps/web/components.json`
-
-### Add more shared components
-
-Run this from the project root to add more primitives to the shared UI package:
+**3. Inicialize o banco de dados**
 
 ```bash
-npx shadcn@latest add accordion dialog popover sheet table -c packages/ui
+pnpm db:push
 ```
 
-Import shared components like this:
+**4. Inicie o servidor de desenvolvimento**
+
+```bash
+pnpm dev
+```
+
+Acesse [http://localhost:3001](http://localhost:3001) no navegador.
+
+## Scripts disponíveis
+
+| Comando | Descrição |
+|---------|-----------|
+| `pnpm dev` | Inicia todos os apps em modo de desenvolvimento |
+| `pnpm dev:web` | Inicia apenas o frontend |
+| `pnpm dev:server` | Inicia apenas o backend |
+| `pnpm build` | Build de produção de todos os apps |
+| `pnpm check-types` | Verifica tipos TypeScript em todo o monorepo |
+| `pnpm check` | Roda Biome (lint + format) com auto-fix |
+| `pnpm db:push` | Aplica o schema ao banco sem gerar migrations |
+| `pnpm db:generate` | Gera arquivos de migration |
+| `pnpm db:migrate` | Executa as migrations pendentes |
+| `pnpm db:studio` | Abre o Drizzle Studio para explorar o banco |
+
+## Arquitetura
+
+```
+Browser
+  └─ Next.js (web :3001)
+       └─ authClient (Better Auth)  ──►  Hono API (:3000)
+                                              └─ Better Auth handler
+                                                    └─ Drizzle ORM
+                                                          └─ Neon PostgreSQL
+```
+
+A autenticação usa cookies `sameSite: none` + `secure: true` para suportar requisições entre as duas portas em desenvolvimento.
+
+## UI compartilhada
+
+Os componentes shadcn/ui ficam em `packages/ui` e são importados pelos apps:
 
 ```tsx
 import { Button } from "@midas/ui/components/button";
 ```
 
-### Add app-specific blocks
+Para adicionar novos primitivos ao pacote compartilhado:
 
-If you want to add app-specific blocks instead of shared primitives, run the shadcn CLI from `apps/web`.
-
-## Git Hooks and Formatting
-
-- Run checks: `pnpm run check`
-
-## Project Structure
-
-```
-midas/
-├── apps/
-│   ├── web/         # Frontend application (Next.js)
-│   └── server/      # Backend API (Hono)
-├── packages/
-│   ├── ui/          # Shared shadcn/ui components and styles
-│   ├── auth/        # Authentication configuration & logic
-│   └── db/          # Database schema & queries
+```bash
+npx shadcn@latest add <component> -c packages/ui
 ```
 
-## Available Scripts
+---
 
-- `pnpm run dev`: Start all applications in development mode
-- `pnpm run build`: Build all applications
-- `pnpm run dev:web`: Start only the web application
-- `pnpm run dev:server`: Start only the server
-- `pnpm run check-types`: Check TypeScript types across all apps
-- `pnpm run db:push`: Push schema changes to database
-- `pnpm run db:generate`: Generate database client/types
-- `pnpm run db:migrate`: Run database migrations
-- `pnpm run db:studio`: Open database studio UI
-- `pnpm run check`: Run Biome formatting and linting
+<p align="center">
+  Feito com TypeScript e ☕
+</p>
