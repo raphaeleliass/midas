@@ -23,9 +23,12 @@ export class EntriesRepository {
 			.returning();
 
 		if (newEntry && categoryIds?.length) {
-			await this.db
-				.insert(entryCategory)
-				.values(categoryIds.map((categoryId) => ({ entryId: newEntry.id, categoryId })));
+			await this.db.insert(entryCategory).values(
+				categoryIds.map((categoryId) => ({
+					entryId: newEntry.id,
+					categoryId,
+				})),
+			);
 		}
 
 		return newEntry ?? null;
@@ -64,7 +67,9 @@ export class EntriesRepository {
 			if (categoryIds.length) {
 				await this.db
 					.insert(entryCategory)
-					.values(categoryIds.map((categoryId) => ({ entryId: id, categoryId })));
+					.values(
+						categoryIds.map((categoryId) => ({ entryId: id, categoryId })),
+					);
 			}
 		}
 

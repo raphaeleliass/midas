@@ -80,3 +80,5 @@ Biome enforces the following (run `pnpm check` to auto-fix):
 - **Tabs** for indentation, **double quotes** for JS/TS strings
 - TailwindCSS classes sorted via `useSortedClasses` (applies to `clsx`, `cva`, `cn`)
 - `noUselessElse`, `useSelfClosingElements`, `noInferrableTypes`, and other strict style rules are errors
+
+After every implementation, always run `pnpm check` to auto-fix Biome errors and warnings before considering the task done.

@@ -5,6 +5,7 @@ import { Scalar } from "@scalar/hono-api-reference";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import type { HonoVariable } from "./HonoVariable.js";
+import { authMiddleware } from "./middlewares/auth.middleware.js";
 import { registerRoutes } from "./routes/index.js";
 
 export const app = new OpenAPIHono<HonoVariable>();
@@ -21,6 +22,23 @@ app.use(
 );
 
 app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
+
+app.use("*", async (c, next) => {
+	const session = await auth.api.getSession({ headers: c.req.raw.headers });
+	if (!session) {
+		c.set("user", null);
+		c.set("session", null);
+		c.set("userId", null);
+	} else {
+		c.set("user", session.user);
+		c.set("session", session.session);
+		c.set("userId", session.user.id);
+	}
+	await next();
+});
+
+app.use("/entries/*", authMiddleware);
+app.use("/categories/*", authMiddleware);
 
 registerRoutes(app);
 
