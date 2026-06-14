@@ -16,6 +16,12 @@ export function createAuth() {
 			schema: schema,
 		}),
 		trustedOrigins: [env.CORS_ORIGIN],
+		session: {
+			cookieCache: {
+				enabled: true,
+				maxAge: 5 * 60,
+			},
+		},
 		emailAndPassword: {
 			enabled: true,
 		},
