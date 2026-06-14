@@ -1,6 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { db } from "@midas/db";
 import type { HonoVariable } from "../HonoVariable.js";
+import { zodErrorHook } from "../middlewares/zod-error.middleware.js";
 import { CategoriesController } from "../modules/categories/categories.controller.js";
 import { CategoriesRepository } from "../modules/categories/categories.repository.js";
 import {
@@ -98,7 +99,9 @@ const deleteCategoryRoute = createRoute({
 	},
 });
 
-export const categoriesRouter = new OpenAPIHono<HonoVariable>();
+export const categoriesRouter = new OpenAPIHono<HonoVariable>({
+	defaultHook: zodErrorHook,
+});
 
 const repository = new CategoriesRepository(db);
 const service = new CategoriesService(repository);

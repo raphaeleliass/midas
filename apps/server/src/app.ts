@@ -6,9 +6,11 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import type { HonoVariable } from "./HonoVariable.js";
 import { authMiddleware } from "./middlewares/auth.middleware.js";
+import { errorMiddleware } from "./middlewares/error.middleware.js";
+import { zodErrorHook } from "./middlewares/zod-error.middleware.js";
 import { registerRoutes } from "./routes/index.js";
 
-export const app = new OpenAPIHono<HonoVariable>();
+export const app = new OpenAPIHono<HonoVariable>({ defaultHook: zodErrorHook });
 
 app.use(logger());
 app.use(
@@ -24,7 +26,9 @@ app.use(
 app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
 app.use("*", async (c, next) => {
-	const session = await auth.api.getSession({ headers: c.req.raw.headers });
+	const session = await auth.api
+		.getSession({ headers: c.req.raw.headers })
+		.catch(() => null);
 	if (!session) {
 		c.set("user", null);
 		c.set("session", null);
@@ -37,8 +41,12 @@ app.use("*", async (c, next) => {
 	await next();
 });
 
+app.use("/entries", authMiddleware);
 app.use("/entries/*", authMiddleware);
+app.use("/categories", authMiddleware);
 app.use("/categories/*", authMiddleware);
+
+app.onError(errorMiddleware);
 
 registerRoutes(app);
 

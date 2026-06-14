@@ -1,6 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { db } from "@midas/db";
 import type { HonoVariable } from "../HonoVariable.js";
+import { zodErrorHook } from "../middlewares/zod-error.middleware.js";
 import { EntriesController } from "../modules/entries/entries.controller.js";
 import { EntriesRepository } from "../modules/entries/entries.repository.js";
 import {
@@ -98,7 +99,9 @@ const deleteEntryRoute = createRoute({
 	},
 });
 
-export const entriesRouter = new OpenAPIHono<HonoVariable>();
+export const entriesRouter = new OpenAPIHono<HonoVariable>({
+	defaultHook: zodErrorHook,
+});
 
 const repository = new EntriesRepository(db);
 const service = new EntriesService(repository);
@@ -110,7 +113,7 @@ entriesRouter.openapi(listEntriesRoute, controller.getMany as any);
 entriesRouter.openapi(getEntryRoute, controller.getOne as any);
 // biome-ignore lint/suspicious/noExplicitAny: controller DI pattern incompatible with openapi v1.x strict handler types
 entriesRouter.openapi(createEntryRoute, controller.create as any);
-// biome-ignore lint/suspicious/noExplicitAny: controller DI pattern incompatible with openapi v1.x strict handler types
-entriesRouter.openapi(updateEntryRoute, controller.update as any);
+
+entriesRouter.openapi(updateEntryRoute, controller.update);
 // biome-ignore lint/suspicious/noExplicitAny: controller DI pattern incompatible with openapi v1.x strict handler types
 entriesRouter.openapi(deleteEntryRoute, controller.delete as any);
