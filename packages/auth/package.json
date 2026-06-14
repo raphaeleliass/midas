@@ -15,6 +15,7 @@
 		"@midas/env": "workspace:*",
 		"better-auth": "catalog:",
 		"dotenv": "catalog:",
+		"ioredis": "^5.11.1",
 		"zod": "catalog:"
 	},
 	"devDependencies": {
