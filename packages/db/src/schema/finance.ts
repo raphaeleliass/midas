@@ -51,10 +51,10 @@ export const entry = pgTable(
 export const entryCategory = pgTable(
 	"entry_category",
 	{
-		entryId: text("entry_id")
+		entryId: uuid("entry_id")
 			.notNull()
 			.references(() => entry.id, { onDelete: "cascade" }),
-		categoryId: text("category_id")
+		categoryId: uuid("category_id")
 			.notNull()
 			.references(() => category.id, { onDelete: "cascade" }),
 	},
