@@ -48,6 +48,8 @@ import {
 	Plus,
 	Search,
 	Sparkles,
+	TrendingDown,
+	TrendingUp,
 } from "lucide-react";
 import { AnimatePresence, motion, type Variants } from "motion/react";
 import Link from "next/link";
@@ -62,6 +64,7 @@ import {
 	XAxis,
 } from "recharts";
 import type { authClient } from "@/lib/auth-client";
+import { CategoryIcon } from "@/lib/category-icons";
 
 type Category = {
 	id: string;
@@ -262,7 +265,7 @@ function ExpensesByCategoryChart({ entries }: { entries: Entry[] }) {
 		data.map((d, i) => [
 			d.name,
 			{
-				label: `${d.icon ? `${d.icon} ` : ""}${d.name}`,
+				label: d.name,
 				color: CHART_COLORS[i % CHART_COLORS.length],
 			},
 		]),
@@ -309,7 +312,7 @@ function ExpensesByCategoryChart({ entries }: { entries: Entry[] }) {
 							style={{ background: CHART_COLORS[i % CHART_COLORS.length] }}
 						/>
 						<span className="min-w-0 flex-1 truncate text-[13px]">
-							{item.icon} {item.name}
+							{item.name}
 						</span>
 						<span className="shrink-0 font-semibold text-[13px] tabular-nums">
 							{centsToBrl(item.total)}
@@ -634,9 +637,26 @@ export default function Dashboard({
 												key={entry.id}
 												className="flex items-center gap-3 px-4 py-3"
 											>
-												<div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-base">
-													{firstCat?.icon ??
-														(entry.type === "income" ? "💰" : "💸")}
+												<div
+													className={cn(
+														"flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
+														firstCat?.icon
+															? "bg-muted text-foreground"
+															: entry.type === "income"
+																? "bg-primary/10 text-primary"
+																: "bg-rose-500/10 text-rose-500",
+													)}
+												>
+													{firstCat?.icon ? (
+														<CategoryIcon
+															iconKey={firstCat.icon}
+															className="h-4 w-4"
+														/>
+													) : entry.type === "income" ? (
+														<TrendingUp className="h-4 w-4" />
+													) : (
+														<TrendingDown className="h-4 w-4" />
+													)}
 												</div>
 												<div className="min-w-0 flex-1">
 													<p className="truncate font-medium text-sm">
@@ -840,9 +860,13 @@ export default function Dashboard({
 													/>
 													<label
 														htmlFor={`cat-${cat.id}`}
-														className="cursor-pointer text-sm"
+														className="flex cursor-pointer items-center gap-1.5 text-sm"
 													>
-														{cat.icon} {cat.name}
+														<CategoryIcon
+															iconKey={cat.icon}
+															className="h-3.5 w-3.5"
+														/>
+														{cat.name}
 													</label>
 												</div>
 											))}

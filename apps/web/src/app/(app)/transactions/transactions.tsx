@@ -4,7 +4,6 @@ import { env } from "@midas/env/web";
 import { Button } from "@midas/ui/components/button";
 import { Calendar } from "@midas/ui/components/calendar";
 import { Card, CardContent } from "@midas/ui/components/card";
-import { Checkbox } from "@midas/ui/components/checkbox";
 import {
 	Dialog,
 	DialogContent,
@@ -44,14 +43,19 @@ import {
 	ArrowDown,
 	ArrowUp,
 	CalendarIcon,
+	Check,
 	MoreHorizontal,
 	Pencil,
 	Plus,
 	Search,
+	Settings2,
 	Trash2,
+	TrendingDown,
+	TrendingUp,
 } from "lucide-react";
 import { AnimatePresence, motion, type Variants } from "motion/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { CATEGORY_ICONS, CategoryIcon } from "@/lib/category-icons";
 
 type Category = {
 	id: string;
@@ -143,6 +147,16 @@ export default function Transactions() {
 		categoryIds: [] as string[],
 	});
 	const [editSubmitting, setEditSubmitting] = useState(false);
+	const [showCategoryForm, setShowCategoryForm] = useState(false);
+	const [categoryForm, setCategoryForm] = useState({ name: "", icon: "" });
+	const [categorySubmitting, setCategorySubmitting] = useState(false);
+	const [showManageCategories, setShowManageCategories] = useState(false);
+	const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+	const [editCategoryForm, setEditCategoryForm] = useState({
+		name: "",
+		icon: "",
+	});
+	const [editCategorySubmitting, setEditCategorySubmitting] = useState(false);
 
 	const loadData = useCallback(async () => {
 		setLoading(true);
@@ -265,6 +279,59 @@ export default function Transactions() {
 
 	async function deleteEntry(id: string) {
 		await fetch(`${BASE}/entries/${id}`, {
+			method: "DELETE",
+			credentials: "include",
+		});
+		await loadData();
+	}
+
+	async function createCategory(e: React.FormEvent) {
+		e.preventDefault();
+		setCategorySubmitting(true);
+		const res = await fetch(`${BASE}/categories`, {
+			method: "POST",
+			credentials: "include",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				name: categoryForm.name,
+				icon: categoryForm.icon || null,
+			}),
+		});
+		if (res.ok) {
+			setCategoryForm({ name: "", icon: "" });
+			setShowCategoryForm(false);
+			await loadData();
+		}
+		setCategorySubmitting(false);
+	}
+
+	function openEditCategory(cat: Category) {
+		setEditCategoryForm({ name: cat.name, icon: cat.icon ?? "" });
+		setEditingCategory(cat);
+	}
+
+	async function updateCategory(e: React.FormEvent) {
+		e.preventDefault();
+		if (!editingCategory) return;
+		setEditCategorySubmitting(true);
+		const res = await fetch(`${BASE}/categories/${editingCategory.id}`, {
+			method: "PATCH",
+			credentials: "include",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				name: editCategoryForm.name,
+				icon: editCategoryForm.icon || null,
+			}),
+		});
+		if (res.ok) {
+			setEditingCategory(null);
+			await loadData();
+		}
+		setEditCategorySubmitting(false);
+	}
+
+	async function deleteCategory(id: string) {
+		await fetch(`${BASE}/categories/${id}`, {
 			method: "DELETE",
 			credentials: "include",
 		});
@@ -399,69 +466,95 @@ export default function Transactions() {
 											</p>
 											<Card>
 												<CardContent className="p-0">
-													<ul className="divide-y">
-														{dayEntries.map((entry) => {
-															const firstCat =
-																entry.entryCategories[0]?.category;
-															return (
-																<li
-																	key={entry.id}
-																	className="flex items-center gap-3 px-4 py-3"
-																>
-																	<div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-base">
-																		{firstCat?.icon ??
-																			(entry.type === "income" ? "💰" : "💸")}
-																	</div>
-																	<div className="min-w-0 flex-1">
-																		<p className="truncate font-medium text-sm">
-																			{entry.title}
-																		</p>
-																		<p className="text-[11px] text-muted-foreground">
-																			{formatDate(entry.date)}
-																			{firstCat ? ` · ${firstCat.name}` : ""}
-																		</p>
-																	</div>
-																	<span
-																		className={cn(
-																			"shrink-0 font-semibold text-sm tabular-nums",
-																			entry.type === "income"
-																				? "text-primary"
-																				: "text-rose-500 dark:text-rose-400",
-																		)}
+													<ul>
+														<AnimatePresence initial={false}>
+															{dayEntries.map((entry) => {
+																const firstCat =
+																	entry.entryCategories[0]?.category;
+																return (
+																	<motion.li
+																		key={entry.id}
+																		layout
+																		initial={{ opacity: 1 }}
+																		exit={{
+																			opacity: 0,
+																			x: -24,
+																			transition: {
+																				duration: 0.22,
+																				ease: "easeIn",
+																			},
+																		}}
+																		className="flex items-center gap-3 border-b px-4 py-3 last:border-b-0"
 																	>
-																		{entry.type === "income" ? "+" : "−"}
-																		{centsToBrl(entry.amountCents)}
-																	</span>
-																	<DropdownMenu>
-																		<DropdownMenuTrigger asChild>
-																			<button
-																				type="button"
+																		<div
+																			className={cn(
+																				"flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
+																				firstCat?.icon
+																					? "bg-muted text-foreground"
+																					: entry.type === "income"
+																						? "bg-primary/10 text-primary"
+																						: "bg-rose-500/10 text-rose-500",
+																			)}
+																		>
+																			{firstCat?.icon ? (
+																				<CategoryIcon
+																					iconKey={firstCat.icon}
+																					className="h-4 w-4"
+																				/>
+																			) : entry.type === "income" ? (
+																				<TrendingUp className="h-4 w-4" />
+																			) : (
+																				<TrendingDown className="h-4 w-4" />
+																			)}
+																		</div>
+																		<div className="min-w-0 flex-1">
+																			<p className="truncate font-medium text-sm">
+																				{entry.title}
+																			</p>
+																			<p className="text-[11px] text-muted-foreground">
+																				{formatDate(entry.date)}
+																				{firstCat ? ` · ${firstCat.name}` : ""}
+																			</p>
+																		</div>
+																		<span
+																			className={cn(
+																				"shrink-0 font-semibold text-sm tabular-nums",
+																				entry.type === "income"
+																					? "text-primary"
+																					: "text-rose-500 dark:text-rose-400",
+																			)}
+																		>
+																			{entry.type === "income" ? "+" : "−"}
+																			{centsToBrl(entry.amountCents)}
+																		</span>
+																		<DropdownMenu>
+																			<DropdownMenuTrigger
 																				className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
 																				aria-label="Opções"
 																			>
 																				<MoreHorizontal className="h-4 w-4" />
-																			</button>
-																		</DropdownMenuTrigger>
-																		<DropdownMenuContent align="end">
-																			<DropdownMenuItem
-																				onClick={() => openEdit(entry)}
-																			>
-																				<Pencil />
-																				Editar
-																			</DropdownMenuItem>
-																			<DropdownMenuSeparator />
-																			<DropdownMenuItem
-																				variant="destructive"
-																				onClick={() => deleteEntry(entry.id)}
-																			>
-																				<Trash2 />
-																				Excluir
-																			</DropdownMenuItem>
-																		</DropdownMenuContent>
-																	</DropdownMenu>
-																</li>
-															);
-														})}
+																			</DropdownMenuTrigger>
+																			<DropdownMenuContent align="end">
+																				<DropdownMenuItem
+																					onClick={() => openEdit(entry)}
+																				>
+																					<Pencil />
+																					Editar
+																				</DropdownMenuItem>
+																				<DropdownMenuSeparator />
+																				<DropdownMenuItem
+																					variant="destructive"
+																					onClick={() => deleteEntry(entry.id)}
+																				>
+																					<Trash2 />
+																					Excluir
+																				</DropdownMenuItem>
+																			</DropdownMenuContent>
+																		</DropdownMenu>
+																	</motion.li>
+																);
+															})}
+														</AnimatePresence>
 													</ul>
 												</CardContent>
 											</Card>
@@ -587,28 +680,59 @@ export default function Transactions() {
 										required
 									/>
 								</div>
-								{categories.length > 0 && (
-									<div className="space-y-2">
+								<div className="space-y-2">
+									<div className="flex items-center justify-between">
 										<Label>Categorias</Label>
-										<div className="flex flex-wrap gap-3">
-											{categories.map((cat) => (
-												<div key={cat.id} className="flex items-center gap-1.5">
-													<Checkbox
-														id={`cat-${cat.id}`}
-														checked={entryForm.categoryIds.includes(cat.id)}
-														onCheckedChange={() => toggleCategoryId(cat.id)}
-													/>
-													<label
-														htmlFor={`cat-${cat.id}`}
-														className="cursor-pointer text-sm"
-													>
-														{cat.icon} {cat.name}
-													</label>
-												</div>
-											))}
+										<div className="flex items-center gap-2">
+											{categories.length > 0 && (
+												<button
+													type="button"
+													onClick={() => setShowManageCategories(true)}
+													className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
+												>
+													<Settings2 className="h-3 w-3" />
+													Gerenciar
+												</button>
+											)}
+											<button
+												type="button"
+												onClick={() => setShowCategoryForm(true)}
+												className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
+											>
+												<Plus className="h-3 w-3" />
+												Nova
+											</button>
 										</div>
 									</div>
-								)}
+									{categories.length > 0 && (
+										<div className="flex flex-wrap gap-2">
+											{categories.map((cat) => (
+												<button
+													key={cat.id}
+													type="button"
+													onClick={() => toggleCategoryId(cat.id)}
+													className={cn(
+														"flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm transition-colors",
+														entryForm.categoryIds.includes(cat.id)
+															? "border-primary bg-primary/10 text-primary"
+															: "border-border text-muted-foreground hover:border-foreground hover:text-foreground",
+													)}
+												>
+													{cat.icon && (
+														<CategoryIcon
+															iconKey={cat.icon}
+															className="h-3.5 w-3.5"
+														/>
+													)}
+													{cat.name}
+													{entryForm.categoryIds.includes(cat.id) && (
+														<Check className="h-3 w-3" />
+													)}
+												</button>
+											))}
+										</div>
+									)}
+								</div>
 								<Button type="submit" className="w-full" disabled={submitting}>
 									{submitting ? "Salvando..." : "Salvar transação"}
 								</Button>
@@ -718,28 +842,59 @@ export default function Transactions() {
 										required
 									/>
 								</div>
-								{categories.length > 0 && (
-									<div className="space-y-2">
+								<div className="space-y-2">
+									<div className="flex items-center justify-between">
 										<Label>Categorias</Label>
-										<div className="flex flex-wrap gap-3">
-											{categories.map((cat) => (
-												<div key={cat.id} className="flex items-center gap-1.5">
-													<Checkbox
-														id={`edit-cat-${cat.id}`}
-														checked={editForm.categoryIds.includes(cat.id)}
-														onCheckedChange={() => toggleEditCategoryId(cat.id)}
-													/>
-													<label
-														htmlFor={`edit-cat-${cat.id}`}
-														className="cursor-pointer text-sm"
-													>
-														{cat.icon} {cat.name}
-													</label>
-												</div>
-											))}
+										<div className="flex items-center gap-2">
+											{categories.length > 0 && (
+												<button
+													type="button"
+													onClick={() => setShowManageCategories(true)}
+													className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
+												>
+													<Settings2 className="h-3 w-3" />
+													Gerenciar
+												</button>
+											)}
+											<button
+												type="button"
+												onClick={() => setShowCategoryForm(true)}
+												className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
+											>
+												<Plus className="h-3 w-3" />
+												Nova
+											</button>
 										</div>
 									</div>
-								)}
+									{categories.length > 0 && (
+										<div className="flex flex-wrap gap-2">
+											{categories.map((cat) => (
+												<button
+													key={cat.id}
+													type="button"
+													onClick={() => toggleEditCategoryId(cat.id)}
+													className={cn(
+														"flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm transition-colors",
+														editForm.categoryIds.includes(cat.id)
+															? "border-primary bg-primary/10 text-primary"
+															: "border-border text-muted-foreground hover:border-foreground hover:text-foreground",
+													)}
+												>
+													{cat.icon && (
+														<CategoryIcon
+															iconKey={cat.icon}
+															className="h-3.5 w-3.5"
+														/>
+													)}
+													{cat.name}
+													{editForm.categoryIds.includes(cat.id) && (
+														<Check className="h-3 w-3" />
+													)}
+												</button>
+											))}
+										</div>
+									)}
+								</div>
 								<Button
 									type="submit"
 									className="w-full"
@@ -752,6 +907,187 @@ export default function Transactions() {
 					</Dialog>
 				)}
 			</AnimatePresence>
+
+			{/* Category creation dialog */}
+			<Dialog open={showCategoryForm} onOpenChange={setShowCategoryForm}>
+				<DialogContent className="sm:max-w-sm">
+					<DialogHeader>
+						<DialogTitle>Nova categoria</DialogTitle>
+					</DialogHeader>
+					<form onSubmit={createCategory} className="space-y-4">
+						<div className="space-y-1.5">
+							<Label>Nome</Label>
+							<Input
+								value={categoryForm.name}
+								onChange={(e) =>
+									setCategoryForm((prev) => ({ ...prev, name: e.target.value }))
+								}
+								placeholder="Ex: Alimentação"
+								required
+							/>
+						</div>
+						<div className="space-y-2">
+							<Label>Ícone</Label>
+							<div className="grid grid-cols-6 gap-1.5">
+								{CATEGORY_ICONS.map(({ key, icon: Icon, label }) => (
+									<button
+										key={key}
+										type="button"
+										title={label}
+										onClick={() =>
+											setCategoryForm((prev) => ({
+												...prev,
+												icon: prev.icon === key ? "" : key,
+											}))
+										}
+										className={cn(
+											"flex h-10 w-10 items-center justify-center rounded-lg border transition-colors",
+											categoryForm.icon === key
+												? "border-primary bg-primary/10 text-primary"
+												: "border-border text-muted-foreground hover:border-foreground hover:text-foreground",
+										)}
+									>
+										<Icon className="h-4 w-4" />
+									</button>
+								))}
+							</div>
+						</div>
+						<Button
+							type="submit"
+							className="w-full"
+							disabled={categorySubmitting}
+						>
+							{categorySubmitting ? "Salvando..." : "Criar categoria"}
+						</Button>
+					</form>
+				</DialogContent>
+			</Dialog>
+
+			{/* Manage categories dialog */}
+			<Dialog
+				open={showManageCategories}
+				onOpenChange={setShowManageCategories}
+			>
+				<DialogContent className="sm:max-w-sm">
+					<DialogHeader>
+						<DialogTitle>Categorias</DialogTitle>
+					</DialogHeader>
+					<div className="max-h-72 space-y-1 overflow-y-auto">
+						{categories.length === 0 ? (
+							<p className="py-6 text-center text-muted-foreground text-sm">
+								Nenhuma categoria criada.
+							</p>
+						) : (
+							categories.map((cat) => (
+								<div
+									key={cat.id}
+									className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-muted"
+								>
+									<div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+										{cat.icon ? (
+											<CategoryIcon iconKey={cat.icon} className="h-4 w-4" />
+										) : (
+											<Tag className="h-4 w-4" />
+										)}
+									</div>
+									<span className="flex-1 text-sm">{cat.name}</span>
+									<button
+										type="button"
+										title="Editar"
+										onClick={() => {
+											setShowManageCategories(false);
+											openEditCategory(cat);
+										}}
+										className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
+									>
+										<Pencil className="h-3.5 w-3.5" />
+									</button>
+									<button
+										type="button"
+										title="Excluir"
+										onClick={() => deleteCategory(cat.id)}
+										className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-background hover:text-rose-500"
+									>
+										<Trash2 className="h-3.5 w-3.5" />
+									</button>
+								</div>
+							))
+						)}
+					</div>
+					<Button
+						variant="outline"
+						className="w-full"
+						onClick={() => {
+							setShowManageCategories(false);
+							setShowCategoryForm(true);
+						}}
+					>
+						<Plus className="h-4 w-4" />
+						Nova categoria
+					</Button>
+				</DialogContent>
+			</Dialog>
+
+			{/* Edit category dialog */}
+			<Dialog
+				open={!!editingCategory}
+				onOpenChange={(open) => !open && setEditingCategory(null)}
+			>
+				<DialogContent className="sm:max-w-sm">
+					<DialogHeader>
+						<DialogTitle>Editar categoria</DialogTitle>
+					</DialogHeader>
+					<form onSubmit={updateCategory} className="space-y-4">
+						<div className="space-y-1.5">
+							<Label>Nome</Label>
+							<Input
+								value={editCategoryForm.name}
+								onChange={(e) =>
+									setEditCategoryForm((prev) => ({
+										...prev,
+										name: e.target.value,
+									}))
+								}
+								placeholder="Ex: Alimentação"
+								required
+							/>
+						</div>
+						<div className="space-y-2">
+							<Label>Ícone</Label>
+							<div className="grid grid-cols-6 gap-1.5">
+								{CATEGORY_ICONS.map(({ key, icon: Icon, label }) => (
+									<button
+										key={key}
+										type="button"
+										title={label}
+										onClick={() =>
+											setEditCategoryForm((prev) => ({
+												...prev,
+												icon: prev.icon === key ? "" : key,
+											}))
+										}
+										className={cn(
+											"flex h-10 w-10 items-center justify-center rounded-lg border transition-colors",
+											editCategoryForm.icon === key
+												? "border-primary bg-primary/10 text-primary"
+												: "border-border text-muted-foreground hover:border-foreground hover:text-foreground",
+										)}
+									>
+										<Icon className="h-4 w-4" />
+									</button>
+								))}
+							</div>
+						</div>
+						<Button
+							type="submit"
+							className="w-full"
+							disabled={editCategorySubmitting}
+						>
+							{editCategorySubmitting ? "Salvando..." : "Salvar alterações"}
+						</Button>
+					</form>
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 }
