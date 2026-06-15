@@ -8,6 +8,12 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@midas/ui/components/card";
+import {
+	type ChartConfig,
+	ChartContainer,
+	ChartTooltip,
+	ChartTooltipContent,
+} from "@midas/ui/components/chart";
 import { Checkbox } from "@midas/ui/components/checkbox";
 import {
 	Dialog,
@@ -25,11 +31,21 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@midas/ui/components/select";
-import { Separator } from "@midas/ui/components/separator";
+import { Skeleton } from "@midas/ui/components/skeleton";
 import { cn } from "@midas/ui/lib/utils";
-import { ArrowDown, ArrowUp, Bell, Plus } from "lucide-react";
+import {
+	ArrowDown,
+	ArrowUp,
+	Bell,
+	PiggyBank,
+	Plus,
+	Search,
+	Sparkles,
+} from "lucide-react";
+import { AnimatePresence, motion, type Variants } from "motion/react";
 import Link from "next/link";
-import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 import type { authClient } from "@/lib/auth-client";
 
 type Category = {
@@ -75,14 +91,28 @@ function formatDate(iso: string) {
 const BASE = env.NEXT_PUBLIC_SERVER_URL;
 const SAVINGS_GOAL_CENTS = 200_000;
 
-const CHART_W = 320;
-const CHART_H = 72;
-const PAD_X = 8;
-const PAD_Y = 6;
-const LABEL_H = 14;
-const TOTAL_H = CHART_H + LABEL_H;
+const chartConfig = {
+	income: {
+		label: "Receitas",
+		color: "#10b981",
+	},
+	expense: {
+		label: "Despesas",
+		color: "#f43f5e",
+	},
+} satisfies ChartConfig;
 
-function AreaChart({ entries }: { entries: Entry[] }) {
+const fadeUp: Variants = {
+	hidden: { opacity: 0, y: 16 },
+	show: { opacity: 1, y: 0, transition: { duration: 0.38, ease: "easeOut" } },
+};
+
+const stagger: Variants = {
+	hidden: {},
+	show: { transition: { staggerChildren: 0.08 } },
+};
+
+function TrendChart({ entries }: { entries: Entry[] }) {
 	const data = useMemo(() => {
 		const today = new Date();
 		return Array.from({ length: 7 }, (_, i) => {
@@ -97,114 +127,72 @@ function AreaChart({ entries }: { entries: Entry[] }) {
 				.filter((e) => e.type === "expense")
 				.reduce((s, e) => s + e.amountCents, 0);
 			return {
-				label: d
+				day: d
 					.toLocaleDateString("pt-BR", { weekday: "short" })
 					.replace(".", ""),
-				income,
-				expense,
+				income: income / 100,
+				expense: expense / 100,
 			};
 		});
 	}, [entries]);
 
-	const maxVal = Math.max(...data.map((d) => Math.max(d.income, d.expense)), 1);
-	const stepX = (CHART_W - PAD_X * 2) / 6;
-	const availH = CHART_H - PAD_Y * 2;
-
-	const toPoints = (vals: number[]) =>
-		vals.map((v, i) => ({
-			x: PAD_X + i * stepX,
-			y: PAD_Y + availH - (v / maxVal) * availH,
-			v,
-		}));
-
-	const incomePoints = toPoints(data.map((d) => d.income));
-	const expensePoints = toPoints(data.map((d) => d.expense));
-
-	function linePath(pts: { x: number; y: number }[]) {
-		return pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
-	}
-
-	function areaPath(pts: { x: number; y: number }[]) {
-		const baseY = PAD_Y + availH;
-		const last = pts[pts.length - 1];
-		const first = pts[0];
-		if (!last || !first) return "";
-		return `${linePath(pts)} L ${last.x} ${baseY} L ${first.x} ${baseY} Z`;
-	}
-
-	const gridYs = [0.25, 0.5, 0.75].map((r) => PAD_Y + availH - r * availH);
-
 	return (
-		<svg viewBox={`0 0 ${CHART_W} ${TOTAL_H}`} width="100%" aria-hidden="true">
-			<defs>
-				<linearGradient id="inc-grad" x1="0" y1="0" x2="0" y2="1">
-					<stop offset="0%" stopColor="#10b981" stopOpacity="0.22" />
-					<stop offset="100%" stopColor="#10b981" stopOpacity="0" />
-				</linearGradient>
-				<linearGradient id="exp-grad" x1="0" y1="0" x2="0" y2="1">
-					<stop offset="0%" stopColor="#f87171" stopOpacity="0.22" />
-					<stop offset="100%" stopColor="#f87171" stopOpacity="0" />
-				</linearGradient>
-			</defs>
-
-			{gridYs.map((y, i) => (
-				<line
-					key={i}
-					x1={PAD_X}
-					y1={y}
-					x2={CHART_W - PAD_X}
-					y2={y}
+		<ChartContainer config={chartConfig} className="h-[140px] w-full">
+			<AreaChart data={data} margin={{ top: 4, right: 4, left: 4, bottom: 0 }}>
+				<defs>
+					<linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
+						<stop offset="0%" stopColor="#10b981" stopOpacity={0.18} />
+						<stop offset="100%" stopColor="#10b981" stopOpacity={0} />
+					</linearGradient>
+					<linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
+						<stop offset="0%" stopColor="#f43f5e" stopOpacity={0.18} />
+						<stop offset="100%" stopColor="#f43f5e" stopOpacity={0} />
+					</linearGradient>
+				</defs>
+				<CartesianGrid
+					vertical={false}
 					stroke="currentColor"
-					strokeOpacity="0.07"
-					strokeDasharray="3 3"
-					strokeWidth="1"
+					strokeOpacity={0.06}
 				/>
-			))}
-
-			<path d={areaPath(incomePoints)} fill="url(#inc-grad)" />
-			<path
-				d={linePath(incomePoints)}
-				fill="none"
-				stroke="#10b981"
-				strokeWidth="1.5"
-				strokeLinejoin="round"
-				strokeLinecap="round"
-			/>
-			{incomePoints
-				.filter((p) => p.v > 0)
-				.map((p, i) => (
-					<circle key={i} cx={p.x} cy={p.y} r="2.5" fill="#10b981" />
-				))}
-
-			<path d={areaPath(expensePoints)} fill="url(#exp-grad)" />
-			<path
-				d={linePath(expensePoints)}
-				fill="none"
-				stroke="#f87171"
-				strokeWidth="1.5"
-				strokeLinejoin="round"
-				strokeLinecap="round"
-			/>
-			{expensePoints
-				.filter((p) => p.v > 0)
-				.map((p, i) => (
-					<circle key={i} cx={p.x} cy={p.y} r="2.5" fill="#f87171" />
-				))}
-
-			{data.map((d, i) => (
-				<text
-					key={i}
-					x={PAD_X + i * stepX}
-					y={TOTAL_H - 1}
-					textAnchor="middle"
-					fontSize={8.5}
-					fill="currentColor"
-					opacity={0.38}
-				>
-					{d.label}
-				</text>
-			))}
-		</svg>
+				<XAxis
+					dataKey="day"
+					axisLine={false}
+					tickLine={false}
+					tick={{ fontSize: 11, fill: "currentColor", opacity: 0.4 }}
+					dy={6}
+				/>
+				<ChartTooltip
+					content={
+						<ChartTooltipContent
+							formatter={(value) =>
+								new Intl.NumberFormat("pt-BR", {
+									style: "currency",
+									currency: "BRL",
+								}).format(Number(value))
+							}
+						/>
+					}
+				/>
+				<Area
+					type="monotone"
+					dataKey="income"
+					stroke="#10b981"
+					strokeWidth={1.5}
+					fill="url(#incomeGrad)"
+					dot={false}
+					activeDot={{ r: 3, fill: "#10b981" }}
+				/>
+				<Area
+					type="monotone"
+					dataKey="expense"
+					stroke="#f43f5e"
+					strokeWidth={1.5}
+					fill="url(#expenseGrad)"
+					dot={false}
+					activeDot={{ r: 3, fill: "#f43f5e" }}
+				/>
+			</AreaChart>
+		</ChartContainer>
 	);
 }
 
@@ -310,307 +298,395 @@ export default function Dashboard({
 
 	return (
 		<div className="relative min-h-full">
-			<div className="mx-auto max-w-2xl space-y-4 p-4 pb-24 md:p-6">
+			<motion.div
+				variants={stagger}
+				initial="hidden"
+				animate="show"
+				className="mx-auto max-w-2xl space-y-4 px-4 pt-4 pb-28 md:px-6 md:pt-6"
+			>
 				{/* Header */}
-				<header className="flex items-center justify-between py-1">
-					<div className="flex items-center gap-3">
-						<div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted font-semibold text-sm">
-							{session.user.name?.[0]?.toUpperCase() ?? "U"}
-						</div>
-						<div>
-							<p className="text-muted-foreground text-xs">{greeting}</p>
-							<p className="font-semibold text-sm leading-tight">
-								{session.user.name}
-							</p>
-						</div>
-					</div>
+				<motion.header
+					variants={fadeUp}
+					className="grid grid-cols-3 items-center py-1"
+				>
 					<button
 						type="button"
-						className="flex h-9 w-9 items-center justify-center rounded-full border text-muted-foreground transition-colors hover:text-foreground"
-						aria-label="Notificações"
+						className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+						aria-label="Buscar"
 					>
-						<Bell className="h-4 w-4" />
+						<Search className="h-4 w-4" />
 					</button>
-				</header>
-
-				{/* Balance card */}
-				<Card className="overflow-hidden border-0 bg-foreground text-background">
-					<CardContent className="p-6">
-						<p className="mb-1 font-semibold text-xs uppercase tracking-widest opacity-50">
-							Saldo Total
+					<div className="flex flex-col items-center">
+						<p className="font-semibold text-sm tracking-tight">Finance</p>
+						<p className="text-[11px] text-muted-foreground">
+							{greeting}, {session.user.name?.split(" ")[0]}
 						</p>
-						{loading ? (
-							<div className="mb-6 h-10 w-44 animate-pulse rounded bg-background/20" />
-						) : (
-							<p className="mb-6 font-bold text-4xl tabular-nums tracking-tight">
-								{centsToBrl(balance)}
+					</div>
+					<div className="flex justify-end">
+						<button
+							type="button"
+							className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+							aria-label="Notificações"
+						>
+							<Bell className="h-4 w-4" />
+						</button>
+					</div>
+				</motion.header>
+
+				{/* Balance */}
+				<motion.div variants={fadeUp}>
+					<Card>
+						<CardContent>
+							<p className="mb-1 font-medium text-[10px] text-muted-foreground uppercase tracking-[0.14em]">
+								Saldo Total
 							</p>
-						)}
-						<div className="grid grid-cols-2 gap-4">
-							<div className="flex items-center gap-2.5">
-								<div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-500/20">
-									<ArrowUp className="h-4 w-4 text-emerald-400" />
-								</div>
-								<div>
-									<p className="text-xs opacity-50">Receitas</p>
-									<p className="font-semibold text-sm tabular-nums">
-										{loading ? "—" : centsToBrl(totalIncome)}
-									</p>
-								</div>
+							{loading ? (
+								<Skeleton className="h-10 w-48" />
+							) : (
+								<motion.p
+									initial={{ opacity: 0, y: 8 }}
+									animate={{ opacity: 1, y: 0 }}
+									transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+									className="font-bold text-[2.6rem] tabular-nums leading-none tracking-tight"
+								>
+									{centsToBrl(balance)}
+								</motion.p>
+							)}
+						</CardContent>
+					</Card>
+				</motion.div>
+
+				{/* Income / Expense */}
+				<motion.div variants={fadeUp} className="grid grid-cols-2 gap-4">
+					<Card>
+						<CardContent>
+							<div className="mb-1 flex items-center gap-1.5">
+								<ArrowUp className="h-3.5 w-3.5 text-emerald-500" />
+								<span className="text-[11px] text-muted-foreground">
+									Receitas
+								</span>
 							</div>
-							<div className="flex items-center gap-2.5">
-								<div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-500/20">
-									<ArrowDown className="h-4 w-4 text-red-400" />
-								</div>
-								<div>
-									<p className="text-xs opacity-50">Despesas</p>
-									<p className="font-semibold text-sm tabular-nums">
-										{loading ? "—" : centsToBrl(totalExpense)}
-									</p>
-								</div>
+							{loading ? (
+								<Skeleton className="h-5 w-24" />
+							) : (
+								<p className="font-semibold text-emerald-600 text-sm tabular-nums dark:text-emerald-400">
+									+{centsToBrl(totalIncome)}
+								</p>
+							)}
+						</CardContent>
+					</Card>
+					<Card>
+						<CardContent>
+							<div className="mb-1 flex items-center gap-1.5">
+								<ArrowDown className="h-3.5 w-3.5 text-rose-500" />
+								<span className="text-[11px] text-muted-foreground">
+									Despesas
+								</span>
 							</div>
-						</div>
-					</CardContent>
-				</Card>
+							{loading ? (
+								<Skeleton className="h-5 w-24" />
+							) : (
+								<p className="font-semibold text-rose-500 text-sm tabular-nums dark:text-rose-400">
+									-{centsToBrl(totalExpense)}
+								</p>
+							)}
+						</CardContent>
+					</Card>
+				</motion.div>
 
 				{/* Savings Goal */}
-				<Card>
-					<CardContent className="p-4">
-						<div className="mb-3 flex items-center justify-between">
-							<p className="font-medium text-sm">Economia do Mês</p>
-							<p
+				<motion.div variants={fadeUp}>
+					<Card>
+						<CardContent>
+							<div className="mb-3 flex items-center justify-between gap-2">
+								<div className="flex items-center gap-3">
+									<div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
+										<PiggyBank className="h-4 w-4 text-primary" />
+									</div>
+									<div>
+										<p className="font-medium text-[10px] text-muted-foreground uppercase tracking-[0.1em]">
+											Meta do Mês
+										</p>
+										<p className="font-bold text-base tabular-nums leading-tight">
+											{loading ? "—" : centsToBrl(Math.abs(monthBalance))}
+										</p>
+									</div>
+								</div>
+								<span
+									className={cn(
+										"rounded-full px-2.5 py-1 font-semibold text-[11px]",
+										monthBalance >= 0
+											? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+											: "bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400",
+									)}
+								>
+									{Math.round(savingsProgress)}%
+								</span>
+							</div>
+							<Progress
+								value={savingsProgress}
 								className={cn(
-									"font-semibold text-sm tabular-nums",
+									"h-2",
 									monthBalance >= 0
-										? "text-emerald-600 dark:text-emerald-400"
-										: "text-red-600 dark:text-red-400",
+										? "[&_[data-slot='progress-indicator']]:bg-emerald-500"
+										: "[&_[data-slot='progress-indicator']]:bg-rose-500",
 								)}
-							>
-								{loading ? "—" : centsToBrl(Math.abs(monthBalance))}
-							</p>
-						</div>
-						<Progress
-							value={savingsProgress}
-							className={cn(
-								monthBalance >= 0
-									? "[&_[data-slot='progress-indicator']]:bg-emerald-500"
-									: "[&_[data-slot='progress-indicator']]:bg-red-400",
-							)}
-						/>
-						<p className="mt-2 text-muted-foreground text-xs">
-							{Math.round(savingsProgress)}% da meta · Meta:{" "}
-							{centsToBrl(SAVINGS_GOAL_CENTS)}
-						</p>
-					</CardContent>
-				</Card>
+							/>
+						</CardContent>
+					</Card>
+				</motion.div>
 
 				{/* Market Trends */}
-				<section>
-					<div className="mb-3 flex items-center justify-between">
-						<div>
-							<h2 className="font-semibold text-sm">Tendências</h2>
-							<p className="text-muted-foreground text-xs">Últimos 7 dias</p>
-						</div>
-						<div className="flex items-center gap-3 text-muted-foreground text-xs">
-							<span className="flex items-center gap-1.5">
-								<span className="h-2 w-2 rounded-full bg-emerald-500" />
-								Receitas
-							</span>
-							<span className="flex items-center gap-1.5">
-								<span className="h-2 w-2 rounded-full bg-red-400" />
-								Despesas
-							</span>
-						</div>
-					</div>
-					{loading ? (
-						<div className="h-20 animate-pulse rounded-lg bg-muted" />
-					) : (
-						<AreaChart entries={entries} />
-					)}
-				</section>
+				<motion.div variants={fadeUp}>
+					<Card>
+						<CardHeader>
+							<div className="flex items-center justify-between">
+								<CardTitle className="font-semibold text-sm">
+									Tendências
+								</CardTitle>
+								<p className="text-[11px] text-muted-foreground">
+									Últimos 7 dias
+								</p>
+							</div>
+						</CardHeader>
+						<CardContent>
+							{loading ? (
+								<Skeleton className="h-[140px] w-full rounded-lg" />
+							) : (
+								<TrendChart entries={entries} />
+							)}
+						</CardContent>
+					</Card>
+				</motion.div>
 
 				{/* Recent Transactions */}
-				<Card>
-					<CardHeader>
-						<div className="flex items-center justify-between">
-							<CardTitle className="font-semibold text-sm">
-								Transações Recentes
-							</CardTitle>
-							<Link
-								href="/transactions"
-								className="text-muted-foreground text-xs transition-colors hover:text-foreground"
-							>
-								Ver todas →
-							</Link>
-						</div>
-					</CardHeader>
-					<CardContent className="p-0 pb-2">
-						{loading ? (
-							<div className="space-y-px px-4 pb-2">
-								{[1, 2, 3].map((n) => (
-									<div
-										key={n}
-										className="h-14 animate-pulse rounded-lg bg-muted"
-									/>
-								))}
-							</div>
-						) : entries.length === 0 ? (
-							<p className="px-4 py-6 text-center text-muted-foreground text-sm">
-								Nenhuma transação.{" "}
-								<button
-									type="button"
-									onClick={() => setShowEntryForm(true)}
-									className="underline underline-offset-2 hover:text-foreground"
+				<motion.div variants={fadeUp}>
+					<Card>
+						<CardHeader>
+							<div className="flex items-center justify-between">
+								<CardTitle className="font-semibold text-sm">
+									Transações Recentes
+								</CardTitle>
+								<Link
+									href="/transactions"
+									className="text-[11px] text-muted-foreground transition-colors hover:text-foreground"
 								>
-									Adicione uma agora.
-								</button>
-							</p>
-						) : (
-							entries.slice(0, 5).map((entry, i) => {
-								const firstCat = entry.entryCategories[0]?.category;
-								return (
-									<Fragment key={entry.id}>
-										{i > 0 && <Separator />}
-										<div className="flex items-center gap-3 px-4 py-3">
-											<div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-base">
-												{firstCat?.icon ??
-													(entry.type === "income" ? "💰" : "💸")}
-											</div>
-											<div className="min-w-0 flex-1">
-												<p className="truncate font-medium text-sm">
-													{entry.title}
-												</p>
-												<p className="text-muted-foreground text-xs">
-													{formatDate(entry.date)}
-													{firstCat ? ` · ${firstCat.name}` : ""}
-												</p>
-											</div>
-											<span
-												className={cn(
-													"shrink-0 font-semibold text-sm tabular-nums",
-													entry.type === "income"
-														? "text-emerald-600 dark:text-emerald-400"
-														: "text-red-600 dark:text-red-400",
-												)}
-											>
-												{entry.type === "income" ? "+" : "−"}
-												{centsToBrl(entry.amountCents)}
-											</span>
-										</div>
-									</Fragment>
-								);
-							})
-						)}
-					</CardContent>
-				</Card>
-			</div>
-
-			{/* FAB */}
-			<Button
-				size="icon"
-				className="fixed right-4 bottom-20 z-40 h-12 w-12 rounded-full shadow-lg md:bottom-6"
-				onClick={() => setShowEntryForm(true)}
-				aria-label="Nova transação"
-			>
-				<Plus className="h-5 w-5" />
-			</Button>
-
-			{/* New entry dialog */}
-			<Dialog
-				open={showEntryForm}
-				onOpenChange={(open) => setShowEntryForm(open)}
-			>
-				<DialogContent className="sm:max-w-md">
-					<DialogHeader>
-						<DialogTitle>Nova transação</DialogTitle>
-					</DialogHeader>
-					<form onSubmit={createEntry} className="space-y-4">
-						<div className="grid grid-cols-2 gap-3">
-							<div className="space-y-1.5">
-								<Label>Tipo</Label>
-								<Select
-									value={entryForm.type}
-									onValueChange={(v) =>
-										setEntryForm((prev) => ({
-											...prev,
-											type: v as "expense" | "income",
-										}))
-									}
-								>
-									<SelectTrigger>
-										<SelectValue />
-									</SelectTrigger>
-									<SelectContent>
-										<SelectItem value="expense">Despesa</SelectItem>
-										<SelectItem value="income">Receita</SelectItem>
-									</SelectContent>
-								</Select>
+									Ver todas →
+								</Link>
 							</div>
-							<div className="space-y-1.5">
-								<Label>Data</Label>
-								<Input
-									type="date"
-									value={entryForm.date}
-									onChange={(e) =>
-										setEntryForm((prev) => ({ ...prev, date: e.target.value }))
-									}
-									required
-								/>
-							</div>
-						</div>
-						<div className="space-y-1.5">
-							<Label>Título</Label>
-							<Input
-								value={entryForm.title}
-								onChange={(e) =>
-									setEntryForm((prev) => ({ ...prev, title: e.target.value }))
-								}
-								placeholder="Ex: Aluguel"
-								required
-							/>
-						</div>
-						<div className="space-y-1.5">
-							<Label>Valor (R$)</Label>
-							<Input
-								value={entryForm.amountBrl}
-								onChange={(e) =>
-									setEntryForm((prev) => ({
-										...prev,
-										amountBrl: e.target.value,
-									}))
-								}
-								placeholder="0,00"
-								required
-							/>
-						</div>
-						{categories.length > 0 && (
-							<div className="space-y-2">
-								<Label>Categorias</Label>
-								<div className="flex flex-wrap gap-3">
-									{categories.map((cat) => (
-										<div key={cat.id} className="flex items-center gap-1.5">
-											<Checkbox
-												id={`cat-${cat.id}`}
-												checked={entryForm.categoryIds.includes(cat.id)}
-												onCheckedChange={() => toggleCategoryId(cat.id)}
-											/>
-											<label
-												htmlFor={`cat-${cat.id}`}
-												className="cursor-pointer text-sm"
-											>
-												{cat.icon} {cat.name}
-											</label>
+						</CardHeader>
+						<CardContent>
+							{loading ? (
+								<div className="divide-y">
+									{[1, 2, 3].map((n) => (
+										<div key={n} className="flex items-center gap-3 px-4 py-3">
+											<Skeleton className="h-9 w-9 shrink-0 rounded-xl" />
+											<div className="flex-1 space-y-1.5">
+												<Skeleton className="h-3.5 w-28" />
+												<Skeleton className="h-3 w-20" />
+											</div>
+											<Skeleton className="h-3.5 w-16" />
 										</div>
 									))}
 								</div>
+							) : entries.length === 0 ? (
+								<p className="px-4 py-8 text-center text-muted-foreground text-sm">
+									Nenhuma transação ainda.{" "}
+									<button
+										type="button"
+										onClick={() => setShowEntryForm(true)}
+										className="underline underline-offset-2 hover:text-foreground"
+									>
+										Adicione uma agora.
+									</button>
+								</p>
+							) : (
+								<ul className="divide-y">
+									{entries.slice(0, 5).map((entry) => {
+										const firstCat = entry.entryCategories[0]?.category;
+										return (
+											<li
+												key={entry.id}
+												className="flex items-center gap-3 px-4 py-3"
+											>
+												<div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-base">
+													{firstCat?.icon ??
+														(entry.type === "income" ? "💰" : "💸")}
+												</div>
+												<div className="min-w-0 flex-1">
+													<p className="truncate font-medium text-sm">
+														{entry.title}
+													</p>
+													<p className="text-[11px] text-muted-foreground">
+														{formatDate(entry.date)}
+														{firstCat ? ` · ${firstCat.name}` : ""}
+													</p>
+												</div>
+												<span
+													className={cn(
+														"shrink-0 font-semibold text-sm tabular-nums",
+														entry.type === "income"
+															? "text-emerald-600 dark:text-emerald-400"
+															: "text-rose-500 dark:text-rose-400",
+													)}
+												>
+													{entry.type === "income" ? "+" : "−"}
+													{centsToBrl(entry.amountCents)}
+												</span>
+											</li>
+										);
+									})}
+								</ul>
+							)}
+						</CardContent>
+					</Card>
+				</motion.div>
+
+				{/* Premium Insights */}
+				<motion.div variants={fadeUp}>
+					<div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900 p-5 text-white">
+						<div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(99,102,241,0.35),transparent_65%)]" />
+						<div className="pointer-events-none absolute -right-6 -bottom-6 h-40 w-40 rounded-full bg-indigo-500/10 blur-2xl" />
+						<div className="relative">
+							<div className="mb-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/15">
+								<Sparkles className="h-4 w-4 text-white" />
 							</div>
-						)}
-						<Button type="submit" className="w-full" disabled={submitting}>
-							{submitting ? "Salvando..." : "Salvar transação"}
-						</Button>
-					</form>
-				</DialogContent>
-			</Dialog>
+							<p className="font-semibold text-base leading-snug">
+								Premium Insights para seu Portfólio
+							</p>
+							<p className="mt-1 text-[12px] text-white/55">
+								Análises avançadas e recomendações personalizadas para você.
+							</p>
+							<button
+								type="button"
+								className="mt-4 rounded-full border border-white/25 px-4 py-1.5 font-medium text-[12px] text-white transition-colors hover:bg-white/10"
+							>
+								Saiba mais
+							</button>
+						</div>
+					</div>
+				</motion.div>
+			</motion.div>
+
+			{/* FAB */}
+			<motion.div
+				className="fixed right-4 bottom-20 z-40 md:bottom-6"
+				whileHover={{ scale: 1.08 }}
+				whileTap={{ scale: 0.92 }}
+			>
+				<Button
+					size="icon"
+					className="h-12 w-12 rounded-full shadow-lg"
+					onClick={() => setShowEntryForm(true)}
+					aria-label="Nova transação"
+				>
+					<Plus className="h-5 w-5" />
+				</Button>
+			</motion.div>
+
+			{/* New entry dialog */}
+			<AnimatePresence>
+				{showEntryForm && (
+					<Dialog open={showEntryForm} onOpenChange={setShowEntryForm}>
+						<DialogContent className="sm:max-w-md">
+							<DialogHeader>
+								<DialogTitle>Nova transação</DialogTitle>
+							</DialogHeader>
+							<form onSubmit={createEntry} className="space-y-4">
+								<div className="grid grid-cols-2 gap-3">
+									<div className="space-y-1.5">
+										<Label>Tipo</Label>
+										<Select
+											value={entryForm.type}
+											onValueChange={(v) =>
+												setEntryForm((prev) => ({
+													...prev,
+													type: v as "expense" | "income",
+												}))
+											}
+										>
+											<SelectTrigger>
+												<SelectValue />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem value="expense">Despesa</SelectItem>
+												<SelectItem value="income">Receita</SelectItem>
+											</SelectContent>
+										</Select>
+									</div>
+									<div className="space-y-1.5">
+										<Label>Data</Label>
+										<Input
+											type="date"
+											value={entryForm.date}
+											onChange={(e) =>
+												setEntryForm((prev) => ({
+													...prev,
+													date: e.target.value,
+												}))
+											}
+											required
+										/>
+									</div>
+								</div>
+								<div className="space-y-1.5">
+									<Label>Título</Label>
+									<Input
+										value={entryForm.title}
+										onChange={(e) =>
+											setEntryForm((prev) => ({
+												...prev,
+												title: e.target.value,
+											}))
+										}
+										placeholder="Ex: Aluguel"
+										required
+									/>
+								</div>
+								<div className="space-y-1.5">
+									<Label>Valor (R$)</Label>
+									<Input
+										value={entryForm.amountBrl}
+										onChange={(e) =>
+											setEntryForm((prev) => ({
+												...prev,
+												amountBrl: e.target.value,
+											}))
+										}
+										placeholder="0,00"
+										required
+									/>
+								</div>
+								{categories.length > 0 && (
+									<div className="space-y-2">
+										<Label>Categorias</Label>
+										<div className="flex flex-wrap gap-3">
+											{categories.map((cat) => (
+												<div key={cat.id} className="flex items-center gap-1.5">
+													<Checkbox
+														id={`cat-${cat.id}`}
+														checked={entryForm.categoryIds.includes(cat.id)}
+														onCheckedChange={() => toggleCategoryId(cat.id)}
+													/>
+													<label
+														htmlFor={`cat-${cat.id}`}
+														className="cursor-pointer text-sm"
+													>
+														{cat.icon} {cat.name}
+													</label>
+												</div>
+											))}
+										</div>
+									</div>
+								)}
+								<Button type="submit" className="w-full" disabled={submitting}>
+									{submitting ? "Salvando..." : "Salvar transação"}
+								</Button>
+							</form>
+						</DialogContent>
+					</Dialog>
+				)}
+			</AnimatePresence>
 		</div>
 	);
 }
