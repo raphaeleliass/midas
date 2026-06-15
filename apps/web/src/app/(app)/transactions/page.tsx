@@ -1,7 +1,5 @@
+import Transactions from "./transactions";
+
 export default function TransactionsPage() {
-	return (
-		<div className="flex h-full items-center justify-center p-8 text-muted-foreground text-sm">
-			Em breve — Transações
-		</div>
-	);
+	return <Transactions />;
 }

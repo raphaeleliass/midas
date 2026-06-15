@@ -2,6 +2,7 @@
 
 import { env } from "@midas/env/web";
 import { Button } from "@midas/ui/components/button";
+import { Calendar } from "@midas/ui/components/calendar";
 import {
 	Card,
 	CardContent,
@@ -23,6 +24,11 @@ import {
 } from "@midas/ui/components/dialog";
 import { Input } from "@midas/ui/components/input";
 import { Label } from "@midas/ui/components/label";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@midas/ui/components/popover";
 import { Progress } from "@midas/ui/components/progress";
 import {
 	Select,
@@ -37,6 +43,7 @@ import {
 	ArrowDown,
 	ArrowUp,
 	Bell,
+	CalendarIcon,
 	PiggyBank,
 	Plus,
 	Search,
@@ -45,7 +52,15 @@ import {
 import { AnimatePresence, motion, type Variants } from "motion/react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
+import {
+	Area,
+	AreaChart,
+	CartesianGrid,
+	Cell,
+	Pie,
+	PieChart,
+	XAxis,
+} from "recharts";
 import type { authClient } from "@/lib/auth-client";
 
 type Category = {
@@ -201,6 +216,108 @@ function TrendChart({ entries }: { entries: Entry[] }) {
 				/>
 			</AreaChart>
 		</ChartContainer>
+	);
+}
+
+const CHART_COLORS = [
+	"var(--chart-1)",
+	"var(--chart-2)",
+	"var(--chart-3)",
+	"var(--chart-4)",
+	"var(--chart-5)",
+];
+
+function ExpensesByCategoryChart({ entries }: { entries: Entry[] }) {
+	const data = useMemo(() => {
+		const month = new Date().toISOString().slice(0, 7);
+		const map = new Map<
+			string,
+			{ name: string; icon: string | null; total: number }
+		>();
+		for (const e of entries.filter(
+			(e) => e.type === "expense" && e.date.startsWith(month),
+		)) {
+			const cat = e.entryCategories[0]?.category;
+			const key = cat?.id ?? "__none__";
+			const bucket = map.get(key) ?? {
+				name: cat?.name ?? "Sem categoria",
+				icon: cat?.icon ?? null,
+				total: 0,
+			};
+			bucket.total += e.amountCents;
+			map.set(key, bucket);
+		}
+		return [...map.values()].sort((a, b) => b.total - a.total);
+	}, [entries]);
+
+	if (data.length === 0) {
+		return (
+			<p className="py-6 text-center text-muted-foreground text-sm">
+				Sem despesas este mês.
+			</p>
+		);
+	}
+
+	const config = Object.fromEntries(
+		data.map((d, i) => [
+			d.name,
+			{
+				label: `${d.icon ? `${d.icon} ` : ""}${d.name}`,
+				color: CHART_COLORS[i % CHART_COLORS.length],
+			},
+		]),
+	) as ChartConfig;
+
+	return (
+		<div>
+			<ChartContainer
+				config={config}
+				className="mx-auto h-[180px] w-full max-w-[220px]"
+			>
+				<PieChart>
+					<ChartTooltip
+						content={
+							<ChartTooltipContent
+								formatter={(value) => centsToBrl(Number(value))}
+							/>
+						}
+					/>
+					<Pie
+						data={data}
+						dataKey="total"
+						nameKey="name"
+						cx="50%"
+						cy="50%"
+						innerRadius={50}
+						outerRadius={80}
+						paddingAngle={2}
+					>
+						{data.map((item, i) => (
+							<Cell
+								key={item.name}
+								fill={CHART_COLORS[i % CHART_COLORS.length]}
+							/>
+						))}
+					</Pie>
+				</PieChart>
+			</ChartContainer>
+			<ul className="mt-3 space-y-1.5">
+				{data.map((item, i) => (
+					<li key={item.name} className="flex items-center gap-2">
+						<span
+							className="h-2.5 w-2.5 shrink-0 rounded-full"
+							style={{ background: CHART_COLORS[i % CHART_COLORS.length] }}
+						/>
+						<span className="min-w-0 flex-1 truncate text-[13px]">
+							{item.icon} {item.name}
+						</span>
+						<span className="shrink-0 font-semibold text-[13px] tabular-nums">
+							{centsToBrl(item.total)}
+						</span>
+					</li>
+				))}
+			</ul>
+		</div>
 	);
 }
 
@@ -550,6 +667,27 @@ export default function Dashboard({
 					</Card>
 				</motion.div>
 
+				{/* Expenses by Category */}
+				<motion.div variants={fadeUp}>
+					<Card>
+						<CardHeader>
+							<div className="flex items-center justify-between">
+								<CardTitle className="font-semibold text-sm">
+									Despesas por Categoria
+								</CardTitle>
+								<p className="text-[11px] text-muted-foreground">Este mês</p>
+							</div>
+						</CardHeader>
+						<CardContent>
+							{loading ? (
+								<Skeleton className="h-[180px] w-full rounded-lg" />
+							) : (
+								<ExpensesByCategoryChart entries={entries} />
+							)}
+						</CardContent>
+					</Card>
+				</motion.div>
+
 				{/* Premium Insights */}
 				<motion.div variants={fadeUp}>
 					<div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900 p-5 text-white">
@@ -624,17 +762,41 @@ export default function Dashboard({
 									</div>
 									<div className="space-y-1.5">
 										<Label>Data</Label>
-										<Input
-											type="date"
-											value={entryForm.date}
-											onChange={(e) =>
-												setEntryForm((prev) => ({
-													...prev,
-													date: e.target.value,
-												}))
-											}
-											required
-										/>
+										<Popover>
+											<PopoverTrigger className="flex h-9 w-full items-center gap-2 rounded-md border border-input bg-transparent px-3 text-left text-sm hover:bg-accent">
+												<CalendarIcon className="h-4 w-4 shrink-0 opacity-50" />
+												{entryForm.date ? (
+													new Date(
+														`${entryForm.date}T12:00:00`,
+													).toLocaleDateString("pt-BR", {
+														day: "2-digit",
+														month: "long",
+														year: "numeric",
+													})
+												) : (
+													<span className="text-muted-foreground">
+														Selecionar
+													</span>
+												)}
+											</PopoverTrigger>
+											<PopoverContent className="w-auto p-0" align="start">
+												<Calendar
+													mode="single"
+													selected={
+														entryForm.date
+															? new Date(`${entryForm.date}T12:00:00`)
+															: undefined
+													}
+													onSelect={(date) =>
+														date &&
+														setEntryForm((prev) => ({
+															...prev,
+															date: date.toISOString().slice(0, 10),
+														}))
+													}
+												/>
+											</PopoverContent>
+										</Popover>
 									</div>
 								</div>
 								<div className="space-y-1.5">
