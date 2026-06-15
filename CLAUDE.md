@@ -74,6 +74,15 @@ NEXT_PUBLIC_SERVER_URL=  # e.g. http://localhost:3000
 
 Nunca adicionar linhas de co-autoria do Claude (`Co-Authored-By`) nas mensagens de commit. Apenas título e descrição objetivos.
 
+## Color palette
+
+The design token palette lives in `apps/web/src/index.css` (OKLCH values). Rules for UI components:
+
+- **Receitas / positivo**: usar `text-primary`, `bg-primary/10`, `bg-primary` — **nunca** `emerald` ou qualquer verde
+- **Despesas / negativo**: usar `text-destructive`, `rose-500` ou `#f43f5e`
+- **Gráficos**: usar `var(--color-primary)` para income, `#f43f5e` para expense
+- Não usar classes de cor do Tailwind fora da paleta definida em `index.css`
+
 ## Code style
 
 Biome enforces the following (run `pnpm check` to auto-fix):

@@ -94,7 +94,7 @@ const SAVINGS_GOAL_CENTS = 200_000;
 const chartConfig = {
 	income: {
 		label: "Receitas",
-		color: "#10b981",
+		color: "var(--color-primary)",
 	},
 	expense: {
 		label: "Despesas",
@@ -141,8 +141,16 @@ function TrendChart({ entries }: { entries: Entry[] }) {
 			<AreaChart data={data} margin={{ top: 4, right: 4, left: 4, bottom: 0 }}>
 				<defs>
 					<linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
-						<stop offset="0%" stopColor="#10b981" stopOpacity={0.18} />
-						<stop offset="100%" stopColor="#10b981" stopOpacity={0} />
+						<stop
+							offset="0%"
+							stopColor="var(--color-primary)"
+							stopOpacity={0.18}
+						/>
+						<stop
+							offset="100%"
+							stopColor="var(--color-primary)"
+							stopOpacity={0}
+						/>
 					</linearGradient>
 					<linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
 						<stop offset="0%" stopColor="#f43f5e" stopOpacity={0.18} />
@@ -176,11 +184,11 @@ function TrendChart({ entries }: { entries: Entry[] }) {
 				<Area
 					type="monotone"
 					dataKey="income"
-					stroke="#10b981"
+					stroke="var(--color-primary)"
 					strokeWidth={1.5}
 					fill="url(#incomeGrad)"
 					dot={false}
-					activeDot={{ r: 3, fill: "#10b981" }}
+					activeDot={{ r: 3, fill: "var(--color-primary)" }}
 				/>
 				<Area
 					type="monotone"
@@ -361,7 +369,7 @@ export default function Dashboard({
 					<Card>
 						<CardContent>
 							<div className="mb-1 flex items-center gap-1.5">
-								<ArrowUp className="h-3.5 w-3.5 text-emerald-500" />
+								<ArrowUp className="h-3.5 w-3.5 text-primary" />
 								<span className="text-[11px] text-muted-foreground">
 									Receitas
 								</span>
@@ -369,7 +377,7 @@ export default function Dashboard({
 							{loading ? (
 								<Skeleton className="h-5 w-24" />
 							) : (
-								<p className="font-semibold text-emerald-600 text-sm tabular-nums dark:text-emerald-400">
+								<p className="font-semibold text-primary text-sm tabular-nums">
 									+{centsToBrl(totalIncome)}
 								</p>
 							)}
@@ -416,7 +424,7 @@ export default function Dashboard({
 									className={cn(
 										"rounded-full px-2.5 py-1 font-semibold text-[11px]",
 										monthBalance >= 0
-											? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+											? "bg-primary/10 text-primary"
 											: "bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400",
 									)}
 								>
@@ -428,7 +436,7 @@ export default function Dashboard({
 								className={cn(
 									"h-2",
 									monthBalance >= 0
-										? "[&_[data-slot='progress-indicator']]:bg-emerald-500"
+										? "[&_[data-slot='progress-indicator']]:bg-primary"
 										: "[&_[data-slot='progress-indicator']]:bg-rose-500",
 								)}
 							/>
@@ -526,7 +534,7 @@ export default function Dashboard({
 													className={cn(
 														"shrink-0 font-semibold text-sm tabular-nums",
 														entry.type === "income"
-															? "text-emerald-600 dark:text-emerald-400"
+															? "text-primary"
 															: "text-rose-500 dark:text-rose-400",
 													)}
 												>
