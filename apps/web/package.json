@@ -8,6 +8,7 @@
 		"start": "next start"
 	},
 	"dependencies": {
+		"@hookform/resolvers": "^5.4.0",
 		"@midas/env": "workspace:*",
 		"@midas/ui": "workspace:*",
 		"@tanstack/react-form": "^1.28.0",
@@ -21,6 +22,7 @@
 		"next-themes": "catalog:",
 		"react": "catalog:",
 		"react-dom": "catalog:",
+		"react-hook-form": "^7.79.0",
 		"recharts": "3.8.0",
 		"sonner": "catalog:",
 		"zod": "catalog:"
