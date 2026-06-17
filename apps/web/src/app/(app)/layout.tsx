@@ -1,7 +1,25 @@
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import AppSidebar from "@/components/app-sidebar";
 import BottomNav from "@/components/bottom-nav";
+import { authClient } from "@/lib/auth-client";
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export default async function AppLayout({
+	children,
+}: {
+	children: React.ReactNode;
+}) {
+	const session = await authClient.getSession({
+		fetchOptions: {
+			headers: await headers(),
+			throw: true,
+		},
+	});
+
+	if (!session?.user) {
+		redirect("/login");
+	}
+
 	return (
 		<div className="flex h-svh">
 			<AppSidebar />
