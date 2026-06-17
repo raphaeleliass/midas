@@ -28,7 +28,8 @@ import { CalendarIcon, Check, Plus, Settings2 } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { CategoryIcon } from "@/lib/category-icons";
-import { BASE, brlToCents, type Category } from "@/lib/finance";
+import { brlToCents, type Category } from "@/lib/finance";
+import { useCreateEntry } from "@/lib/queries";
 
 const entrySchema = z.object({
 	type: z.enum(["Despesa", "Receita"]),
@@ -44,17 +45,16 @@ export function EntryFormDialog({
 	open,
 	onOpenChange,
 	categories,
-	onSuccess,
 	onManageCategories,
 	onNewCategory,
 }: {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	categories: Category[];
-	onSuccess: () => Promise<void>;
 	onManageCategories: () => void;
 	onNewCategory: () => void;
 }) {
+	const createEntry = useCreateEntry();
 	const form = useForm<EntryFormValues>({
 		resolver: zodResolver(entrySchema),
 		defaultValues: {
@@ -67,23 +67,15 @@ export function EntryFormDialog({
 	});
 
 	async function handleSubmit(values: EntryFormValues) {
-		const res = await fetch(`${BASE}/entries`, {
-			method: "POST",
-			credentials: "include",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({
-				type: values.type === "Despesa" ? "expense" : "income",
-				title: values.title,
-				amountCents: brlToCents(values.amountBrl),
-				date: new Date(`${values.date}T12:00:00`).toISOString(),
-				categoryIds: values.categoryIds,
-			}),
+		await createEntry.mutateAsync({
+			type: values.type === "Despesa" ? "expense" : "income",
+			title: values.title,
+			amountCents: brlToCents(values.amountBrl),
+			date: new Date(`${values.date}T12:00:00`).toISOString(),
+			categoryIds: values.categoryIds,
 		});
-		if (res.ok) {
-			form.reset();
-			onOpenChange(false);
-			await onSuccess();
-		}
+		form.reset();
+		onOpenChange(false);
 	}
 
 	return (

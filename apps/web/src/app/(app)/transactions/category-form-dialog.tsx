@@ -12,35 +12,26 @@ import { Label } from "@midas/ui/components/label";
 import { cn } from "@midas/ui/lib/utils";
 import { useState } from "react";
 import { CATEGORY_ICONS } from "@/lib/category-icons";
-import { BASE } from "@/lib/finance";
+import { useCreateCategory } from "@/lib/queries";
 
 export function CategoryFormDialog({
 	open,
 	onOpenChange,
-	onSuccess,
 }: {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	onSuccess: () => Promise<void>;
 }) {
+	const createCategory = useCreateCategory();
 	const [form, setForm] = useState({ name: "", icon: "" });
-	const [submitting, setSubmitting] = useState(false);
 
 	async function handleSubmit(e: React.FormEvent) {
 		e.preventDefault();
-		setSubmitting(true);
-		const res = await fetch(`${BASE}/categories`, {
-			method: "POST",
-			credentials: "include",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ name: form.name, icon: form.icon || null }),
+		await createCategory.mutateAsync({
+			name: form.name,
+			icon: form.icon || null,
 		});
-		if (res.ok) {
-			setForm({ name: "", icon: "" });
-			onOpenChange(false);
-			await onSuccess();
-		}
-		setSubmitting(false);
+		setForm({ name: "", icon: "" });
+		onOpenChange(false);
 	}
 
 	return (
@@ -87,8 +78,12 @@ export function CategoryFormDialog({
 							))}
 						</div>
 					</div>
-					<Button type="submit" className="w-full" disabled={submitting}>
-						{submitting ? "Salvando..." : "Criar categoria"}
+					<Button
+						type="submit"
+						className="w-full"
+						disabled={createCategory.isPending}
+					>
+						{createCategory.isPending ? "Salvando..." : "Criar categoria"}
 					</Button>
 				</form>
 			</DialogContent>

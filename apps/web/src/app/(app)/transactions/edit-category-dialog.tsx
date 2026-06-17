@@ -12,19 +12,18 @@ import { Label } from "@midas/ui/components/label";
 import { cn } from "@midas/ui/lib/utils";
 import { useEffect, useState } from "react";
 import { CATEGORY_ICONS } from "@/lib/category-icons";
-import { BASE, type Category } from "@/lib/finance";
+import type { Category } from "@/lib/finance";
+import { useUpdateCategory } from "@/lib/queries";
 
 export function EditCategoryDialog({
 	category,
 	onClose,
-	onSuccess,
 }: {
 	category: Category | null;
 	onClose: () => void;
-	onSuccess: () => Promise<void>;
 }) {
+	const updateCategory = useUpdateCategory();
 	const [form, setForm] = useState({ name: "", icon: "" });
-	const [submitting, setSubmitting] = useState(false);
 
 	useEffect(() => {
 		if (category) {
@@ -35,18 +34,12 @@ export function EditCategoryDialog({
 	async function handleSubmit(e: React.FormEvent) {
 		e.preventDefault();
 		if (!category) return;
-		setSubmitting(true);
-		const res = await fetch(`${BASE}/categories/${category.id}`, {
-			method: "PATCH",
-			credentials: "include",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ name: form.name, icon: form.icon || null }),
+		await updateCategory.mutateAsync({
+			id: category.id,
+			name: form.name,
+			icon: form.icon || null,
 		});
-		if (res.ok) {
-			onClose();
-			await onSuccess();
-		}
-		setSubmitting(false);
+		onClose();
 	}
 
 	return (
@@ -93,8 +86,12 @@ export function EditCategoryDialog({
 							))}
 						</div>
 					</div>
-					<Button type="submit" className="w-full" disabled={submitting}>
-						{submitting ? "Salvando..." : "Salvar alterações"}
+					<Button
+						type="submit"
+						className="w-full"
+						disabled={updateCategory.isPending}
+					>
+						{updateCategory.isPending ? "Salvando..." : "Salvar alterações"}
 					</Button>
 				</form>
 			</DialogContent>

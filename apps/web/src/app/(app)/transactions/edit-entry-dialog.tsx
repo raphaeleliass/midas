@@ -26,23 +26,23 @@ import { cn } from "@midas/ui/lib/utils";
 import { CalendarIcon, Check, Plus, Settings2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { CategoryIcon } from "@/lib/category-icons";
-import { BASE, brlToCents, type Category, type Entry } from "@/lib/finance";
+import { brlToCents, type Category, type Entry } from "@/lib/finance";
+import { useUpdateEntry } from "@/lib/queries";
 
 export function EditEntryDialog({
 	entry,
 	onClose,
 	categories,
-	onSuccess,
 	onManageCategories,
 	onNewCategory,
 }: {
 	entry: Entry | null;
 	onClose: () => void;
 	categories: Category[];
-	onSuccess: () => Promise<void>;
 	onManageCategories: () => void;
 	onNewCategory: () => void;
 }) {
+	const updateEntry = useUpdateEntry();
 	const [form, setForm] = useState({
 		type: "expense" as "expense" | "income",
 		title: "",
@@ -50,7 +50,6 @@ export function EditEntryDialog({
 		date: "",
 		categoryIds: [] as string[],
 	});
-	const [submitting, setSubmitting] = useState(false);
 
 	useEffect(() => {
 		if (entry) {
@@ -76,24 +75,15 @@ export function EditEntryDialog({
 	async function handleSubmit(e: React.FormEvent) {
 		e.preventDefault();
 		if (!entry) return;
-		setSubmitting(true);
-		const res = await fetch(`${BASE}/entries/${entry.id}`, {
-			method: "PATCH",
-			credentials: "include",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({
-				type: form.type,
-				title: form.title,
-				amountCents: brlToCents(form.amountBrl),
-				date: new Date(`${form.date}T12:00:00`).toISOString(),
-				categoryIds: form.categoryIds,
-			}),
+		await updateEntry.mutateAsync({
+			id: entry.id,
+			type: form.type,
+			title: form.title,
+			amountCents: brlToCents(form.amountBrl),
+			date: new Date(`${form.date}T12:00:00`).toISOString(),
+			categoryIds: form.categoryIds,
 		});
-		if (res.ok) {
-			onClose();
-			await onSuccess();
-		}
-		setSubmitting(false);
+		onClose();
 	}
 
 	return (
@@ -231,8 +221,12 @@ export function EditEntryDialog({
 							</div>
 						)}
 					</div>
-					<Button type="submit" className="w-full" disabled={submitting}>
-						{submitting ? "Salvando..." : "Salvar alterações"}
+					<Button
+						type="submit"
+						className="w-full"
+						disabled={updateEntry.isPending}
+					>
+						{updateEntry.isPending ? "Salvando..." : "Salvar alterações"}
 					</Button>
 				</form>
 			</DialogContent>
