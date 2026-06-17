@@ -68,3 +68,20 @@
 	--sidebar-border: oklch(1 0 0 / 10%);
 	--sidebar-ring: oklch(0.556 0 0);
 }
+
+@media print {
+	nav,
+	header,
+	.no-print {
+		display: none;
+	}
+
+	body {
+		background: white;
+	}
+
+	main,
+	[data-slot="card"] {
+		break-inside: avoid;
+	}
+}
