@@ -75,6 +75,12 @@ importers:
 
   apps/server:
     dependencies:
+      '@abacatepay/sdk':
+        specifier: ^1.2.0
+        version: 1.2.0
+      '@abacatepay/types':
+        specifier: ^2.0.3
+        version: 2.0.3
       '@hono/node-server':
         specifier: ^1.14.4
         version: 1.19.14(hono@4.12.25)
@@ -264,6 +270,9 @@ importers:
       drizzle-kit:
         specifier: ^0.31.8
         version: 0.31.10
+      tsx:
+        specifier: ^4.19.2
+        version: 4.22.4
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -361,6 +370,17 @@ importers:
         version: 6.0.3
 
 packages:
+
+  '@abacatepay/rest@0.0.1':
+    resolution: {integrity: sha512-3IY/m3J7ypbSPpZzPBJkFLvXkSIygJ4QdYcd0KKwwJC7XQAvR0lVUCDElLzdQvijzLjjMamW8TJLtPaS+Swhmg==}
+    engines: {bun: '>=1.0.0', node: '>=18'}
+
+  '@abacatepay/sdk@1.2.0':
+    resolution: {integrity: sha512-i5yx0ruX06WQDmyXFYOlwZYXk8lTiSjpXt75hbwwS2tfimzr/mSPHclC6HyMINJPEjrkZeoizKfsZ65GbVWJNw==}
+    engines: {bun: '>=1.0.0', node: '>=18'}
+
+  '@abacatepay/types@2.0.3':
+    resolution: {integrity: sha512-JWi6cH9n86BMgCF4TUu09gN6LmJQP35q4w305+zt23KLALtiWwsFgxejexaTffamkXWDOgJJ8sCgcxh6x9iuMw==}
 
   '@alloc/quick-lru@5.2.0':
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
@@ -3669,6 +3689,15 @@ packages:
     resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
 
 snapshots:
+
+  '@abacatepay/rest@0.0.1': {}
+
+  '@abacatepay/sdk@1.2.0':
+    dependencies:
+      '@abacatepay/rest': 0.0.1
+      '@abacatepay/types': 2.0.3
+
+  '@abacatepay/types@2.0.3': {}
 
   '@alloc/quick-lru@5.2.0': {}
 

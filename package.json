@@ -16,6 +16,7 @@
 		"db:studio": "turbo -F @midas/db db:studio",
 		"db:generate": "turbo -F @midas/db db:generate",
 		"db:migrate": "turbo -F @midas/db db:migrate",
+		"db:seed": "turbo -F @midas/db db:seed",
 		"check": "biome check --write ."
 	},
 	"dependencies": {
