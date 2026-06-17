@@ -2,6 +2,8 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { db } from "@midas/db";
 import type { HonoVariable } from "../HonoVariable.js";
 import { zodErrorHook } from "../middlewares/zod-error.middleware.js";
+import { BillingRepository } from "../modules/billing/billing.repository.js";
+import { BillingService } from "../modules/billing/billing.service.js";
 import { CategoriesController } from "../modules/categories/categories.controller.js";
 import { CategoriesRepository } from "../modules/categories/categories.repository.js";
 import {
@@ -103,8 +105,10 @@ export const categoriesRouter = new OpenAPIHono<HonoVariable>({
 	defaultHook: zodErrorHook,
 });
 
+const billingRepository = new BillingRepository(db);
+const billingService = new BillingService(billingRepository);
 const repository = new CategoriesRepository(db);
-const service = new CategoriesService(repository);
+const service = new CategoriesService(repository, billingService.isPremium);
 const controller = new CategoriesController(service);
 
 // biome-ignore lint/suspicious/noExplicitAny: controller DI pattern incompatible with openapi v1.x strict handler types

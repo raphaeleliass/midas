@@ -8,10 +8,25 @@ type Category = NonNullable<
 	Awaited<ReturnType<CategoriesRepository["findById"]>>
 >;
 
+const FREE_PLAN_CATEGORY_LIMIT = 5;
+
 export class CategoriesService {
-	constructor(private readonly repository: CategoriesRepository) {}
+	constructor(
+		private readonly repository: CategoriesRepository,
+		private readonly checkIsPremium: (userId: string) => Promise<boolean>,
+	) {}
 
 	create = async (userId: string, data: TCreateCategory) => {
+		const isPremium = await this.checkIsPremium(userId);
+		if (!isPremium) {
+			const currentCount = await this.repository.countByUser(userId);
+			if (currentCount >= FREE_PLAN_CATEGORY_LIMIT) {
+				throw new HTTPException(403, {
+					message: "CATEGORY_LIMIT_REACHED",
+				});
+			}
+		}
+
 		const result = await this.repository.create(data, userId);
 		await delCache(`categories:${userId}`);
 		return result;
