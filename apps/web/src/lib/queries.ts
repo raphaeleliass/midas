@@ -93,6 +93,12 @@ export function useDeleteEntry() {
 	});
 }
 
+export class CategoryLimitError extends Error {
+	constructor() {
+		super("CATEGORY_LIMIT_REACHED");
+	}
+}
+
 export function useCreateCategory() {
 	const queryClient = useQueryClient();
 	return useMutation({
@@ -103,6 +109,12 @@ export function useCreateCategory() {
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(data),
 			});
+			if (res.status === 403) {
+				const body = await res.json().catch(() => ({}));
+				if (body?.error === "CATEGORY_LIMIT_REACHED") {
+					throw new CategoryLimitError();
+				}
+			}
 			if (!res.ok) throw new Error("Falha ao criar categoria");
 			return res.json();
 		},
