@@ -1,11 +1,12 @@
 "use client";
 
 import { Button } from "@midas/ui/components/button";
-import { Plus, Search } from "lucide-react";
+import { Plus } from "lucide-react";
 import { motion } from "motion/react";
 import { useCallback, useEffect, useState } from "react";
 import { fadeUp, stagger } from "@/lib/animations";
 import { BASE, type Category, type Entry } from "@/lib/finance";
+import { AppHeader } from "../app-header";
 import { SummaryCards } from "../summary-cards";
 import { CategoryFormDialog } from "./category-form-dialog";
 import { EditCategoryDialog } from "./edit-category-dialog";
@@ -72,22 +73,7 @@ export default function Transactions() {
 				animate="show"
 				className="mx-auto max-w-2xl space-y-4 px-4 pt-4 pb-28 md:px-6 md:pt-6"
 			>
-				<motion.header
-					variants={fadeUp}
-					className="grid grid-cols-3 items-center py-1"
-				>
-					<button
-						type="button"
-						className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-						aria-label="Buscar"
-					>
-						<Search className="h-4 w-4" />
-					</button>
-					<div className="flex justify-center">
-						<p className="font-semibold text-sm tracking-tight">Transações</p>
-					</div>
-					<div />
-				</motion.header>
+				<AppHeader title="Transações" showBell={false} />
 
 				<motion.div variants={fadeUp}>
 					<SummaryCards

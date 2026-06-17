@@ -1,11 +1,11 @@
 "use client";
 
-import { Bell, Search } from "lucide-react";
 import { motion } from "motion/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { fadeUp, stagger } from "@/lib/animations";
 import type { authClient } from "@/lib/auth-client";
 import { BASE, type Entry } from "@/lib/finance";
+import { AppHeader } from "../app-header";
 import { EfficiencyScoreCard } from "./efficiency-score-card";
 import type { CategoryData } from "./expense-distribution-card";
 import { ExpenseDistributionCard } from "./expense-distribution-card";
@@ -139,30 +139,7 @@ export default function Analytics({
 			animate="show"
 			className="mx-auto max-w-2xl space-y-4 px-4 pt-4 pb-28 md:px-6 md:pt-6"
 		>
-			<motion.header
-				variants={fadeUp}
-				className="grid grid-cols-3 items-center py-1"
-			>
-				<button
-					type="button"
-					className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-					aria-label="Buscar"
-				>
-					<Search className="h-4 w-4" />
-				</button>
-				<div className="flex flex-col items-center">
-					<p className="font-semibold text-sm tracking-tight">Finance</p>
-				</div>
-				<div className="flex justify-end">
-					<button
-						type="button"
-						className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-						aria-label="Notificações"
-					>
-						<Bell className="h-4 w-4" />
-					</button>
-				</div>
-			</motion.header>
+			<AppHeader title="Finance" />
 
 			<motion.div variants={fadeUp} className="space-y-3">
 				<h1 className="font-bold text-2xl tracking-tight">Analytics</h1>

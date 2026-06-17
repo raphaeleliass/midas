@@ -1,12 +1,13 @@
 "use client";
 
 import { Button } from "@midas/ui/components/button";
-import { Bell, Plus, Search } from "lucide-react";
+import { Plus } from "lucide-react";
 import { motion } from "motion/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { fadeUp, stagger } from "@/lib/animations";
 import type { authClient } from "@/lib/auth-client";
 import { BASE, type Category, type Entry } from "@/lib/finance";
+import { AppHeader } from "../app-header";
 import { SummaryCards } from "../summary-cards";
 import { CategoryFormDialog } from "../transactions/category-form-dialog";
 import { EditCategoryDialog } from "../transactions/edit-category-dialog";
@@ -88,33 +89,10 @@ export default function Dashboard({
 				animate="show"
 				className="mx-auto max-w-2xl space-y-4 px-4 pt-4 pb-28 md:px-6 md:pt-6"
 			>
-				<motion.header
-					variants={fadeUp}
-					className="grid grid-cols-3 items-center py-1"
-				>
-					<button
-						type="button"
-						className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-						aria-label="Buscar"
-					>
-						<Search className="h-4 w-4" />
-					</button>
-					<div className="flex flex-col items-center">
-						<p className="font-semibold text-sm tracking-tight">Finance</p>
-						<p className="text-[11px] text-muted-foreground">
-							{greeting}, {session.user.name?.split(" ")[0]}
-						</p>
-					</div>
-					<div className="flex justify-end">
-						<button
-							type="button"
-							className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-							aria-label="Notificações"
-						>
-							<Bell className="h-4 w-4" />
-						</button>
-					</div>
-				</motion.header>
+				<AppHeader
+					title="Finance"
+					subtitle={`${greeting}, ${session.user.name?.split(" ")[0]}`}
+				/>
 
 				<motion.div variants={fadeUp}>
 					<BalanceCard balance={balance} loading={loading} />
