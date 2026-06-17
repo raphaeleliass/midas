@@ -15,6 +15,9 @@ apps/web/src/routeTree.gen.ts
 .env
 .env*.local
 
+# Local dev environment config
+.mcp.json
+
 # IDEs and editors
 .vscode/*
 !.vscode/settings.json
