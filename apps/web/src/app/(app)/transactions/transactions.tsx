@@ -3,9 +3,15 @@
 import { Button } from "@midas/ui/components/button";
 import { Plus } from "lucide-react";
 import { motion } from "motion/react";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { fadeUp, stagger } from "@/lib/animations";
-import { BASE, type Category, type Entry } from "@/lib/finance";
+import type { Entry } from "@/lib/finance";
+import {
+	useCategories,
+	useDeleteCategory,
+	useDeleteEntry,
+	useEntries,
+} from "@/lib/queries";
 import { AppHeader } from "../app-header";
 import { SummaryCards } from "../summary-cards";
 import { CategoryFormDialog } from "./category-form-dialog";
@@ -16,29 +22,20 @@ import { ManageCategoriesDialog } from "./manage-categories-dialog";
 import { TransactionList } from "./transaction-list";
 
 export default function Transactions() {
-	const [entries, setEntries] = useState<Entry[]>([]);
-	const [categories, setCategories] = useState<Category[]>([]);
-	const [loading, setLoading] = useState(true);
+	const { data: entries = [], isLoading: entriesLoading } = useEntries();
+	const { data: categories = [], isLoading: categoriesLoading } =
+		useCategories();
+	const loading = entriesLoading || categoriesLoading;
+	const deleteEntry = useDeleteEntry();
+	const deleteCategory = useDeleteCategory();
+
 	const [showEntryForm, setShowEntryForm] = useState(false);
 	const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
 	const [showCategoryForm, setShowCategoryForm] = useState(false);
 	const [showManageCategories, setShowManageCategories] = useState(false);
-	const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-
-	const loadData = useCallback(async () => {
-		setLoading(true);
-		const [entriesRes, categoriesRes] = await Promise.all([
-			fetch(`${BASE}/entries`, { credentials: "include" }),
-			fetch(`${BASE}/categories`, { credentials: "include" }),
-		]);
-		if (entriesRes.ok) setEntries(await entriesRes.json());
-		if (categoriesRes.ok) setCategories(await categoriesRes.json());
-		setLoading(false);
-	}, []);
-
-	useEffect(() => {
-		loadData();
-	}, [loadData]);
+	const [editingCategory, setEditingCategory] = useState<
+		(typeof categories)[number] | null
+	>(null);
 
 	const currentMonth = new Date().toISOString().slice(0, 7);
 	const monthEntries = entries.filter((e) => e.date.startsWith(currentMonth));
@@ -48,22 +45,6 @@ export default function Transactions() {
 	const monthExpense = monthEntries
 		.filter((e) => e.type === "expense")
 		.reduce((s, e) => s + e.amountCents, 0);
-
-	async function deleteEntry(id: string) {
-		await fetch(`${BASE}/entries/${id}`, {
-			method: "DELETE",
-			credentials: "include",
-		});
-		await loadData();
-	}
-
-	async function deleteCategory(id: string) {
-		await fetch(`${BASE}/categories/${id}`, {
-			method: "DELETE",
-			credentials: "include",
-		});
-		await loadData();
-	}
 
 	return (
 		<div className="relative min-h-full">
@@ -89,7 +70,7 @@ export default function Transactions() {
 						loading={loading}
 						onAddEntry={() => setShowEntryForm(true)}
 						onEdit={setEditingEntry}
-						onDelete={deleteEntry}
+						onDelete={(id) => deleteEntry.mutate(id)}
 					/>
 				</motion.div>
 			</motion.div>
@@ -113,7 +94,6 @@ export default function Transactions() {
 				open={showEntryForm}
 				onOpenChange={setShowEntryForm}
 				categories={categories}
-				onSuccess={loadData}
 				onManageCategories={() => {
 					setShowEntryForm(false);
 					setShowManageCategories(true);
@@ -128,7 +108,6 @@ export default function Transactions() {
 				entry={editingEntry}
 				onClose={() => setEditingEntry(null)}
 				categories={categories}
-				onSuccess={loadData}
 				onManageCategories={() => {
 					setEditingEntry(null);
 					setShowManageCategories(true);
@@ -142,7 +121,6 @@ export default function Transactions() {
 			<CategoryFormDialog
 				open={showCategoryForm}
 				onOpenChange={setShowCategoryForm}
-				onSuccess={loadData}
 			/>
 
 			<ManageCategoriesDialog
@@ -150,14 +128,13 @@ export default function Transactions() {
 				onOpenChange={setShowManageCategories}
 				categories={categories}
 				onEdit={setEditingCategory}
-				onDelete={deleteCategory}
+				onDelete={(id) => deleteCategory.mutate(id)}
 				onNew={() => setShowCategoryForm(true)}
 			/>
 
 			<EditCategoryDialog
 				category={editingCategory}
 				onClose={() => setEditingCategory(null)}
-				onSuccess={loadData}
 			/>
 		</div>
 	);

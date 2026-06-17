@@ -3,10 +3,10 @@
 import { Button } from "@midas/ui/components/button";
 import { Plus } from "lucide-react";
 import { motion } from "motion/react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { fadeUp, stagger } from "@/lib/animations";
-import type { authClient } from "@/lib/auth-client";
-import { BASE, type Category, type Entry } from "@/lib/finance";
+import { authClient } from "@/lib/auth-client";
+import { useCategories, useDeleteCategory, useEntries } from "@/lib/queries";
 import { AppHeader } from "../app-header";
 import { SummaryCards } from "../summary-cards";
 import { CategoryFormDialog } from "../transactions/category-form-dialog";
@@ -22,33 +22,20 @@ import { TrendCard } from "./trend-chart";
 
 const SAVINGS_GOAL_CENTS = 200_000;
 
-export default function Dashboard({
-	session,
-}: {
-	session: typeof authClient.$Infer.Session;
-}) {
-	const [entries, setEntries] = useState<Entry[]>([]);
-	const [categories, setCategories] = useState<Category[]>([]);
-	const [loading, setLoading] = useState(true);
+export default function Dashboard() {
+	const { data: sessionData } = authClient.useSession();
+	const { data: entries = [], isLoading: entriesLoading } = useEntries();
+	const { data: categories = [], isLoading: categoriesLoading } =
+		useCategories();
+	const loading = entriesLoading || categoriesLoading;
+	const deleteCategory = useDeleteCategory();
+
 	const [showEntryForm, setShowEntryForm] = useState(false);
 	const [showCategoryForm, setShowCategoryForm] = useState(false);
 	const [showManageCategories, setShowManageCategories] = useState(false);
-	const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-
-	const loadData = useCallback(async () => {
-		setLoading(true);
-		const [entriesRes, categoriesRes] = await Promise.all([
-			fetch(`${BASE}/entries`, { credentials: "include" }),
-			fetch(`${BASE}/categories`, { credentials: "include" }),
-		]);
-		if (entriesRes.ok) setEntries(await entriesRes.json());
-		if (categoriesRes.ok) setCategories(await categoriesRes.json());
-		setLoading(false);
-	}, []);
-
-	useEffect(() => {
-		loadData();
-	}, [loadData]);
+	const [editingCategory, setEditingCategory] = useState<
+		(typeof categories)[number] | null
+	>(null);
 
 	const totalIncome = entries
 		.filter((entry) => entry.type === "income")
@@ -91,7 +78,7 @@ export default function Dashboard({
 			>
 				<AppHeader
 					title="Finance"
-					subtitle={`${greeting}, ${session.user.name?.split(" ")[0]}`}
+					subtitle={`${greeting}, ${sessionData?.user.name?.split(" ")[0] ?? ""}`}
 				/>
 
 				<motion.div variants={fadeUp}>
@@ -154,7 +141,6 @@ export default function Dashboard({
 				open={showEntryForm}
 				onOpenChange={setShowEntryForm}
 				categories={categories}
-				onSuccess={loadData}
 				onManageCategories={() => {
 					setShowEntryForm(false);
 					setShowManageCategories(true);
@@ -168,7 +154,6 @@ export default function Dashboard({
 			<CategoryFormDialog
 				open={showCategoryForm}
 				onOpenChange={setShowCategoryForm}
-				onSuccess={loadData}
 			/>
 
 			<ManageCategoriesDialog
@@ -176,20 +161,13 @@ export default function Dashboard({
 				onOpenChange={setShowManageCategories}
 				categories={categories}
 				onEdit={setEditingCategory}
-				onDelete={async (id) => {
-					await fetch(`${BASE}/categories/${id}`, {
-						method: "DELETE",
-						credentials: "include",
-					});
-					await loadData();
-				}}
+				onDelete={(id) => deleteCategory.mutate(id)}
 				onNew={() => setShowCategoryForm(true)}
 			/>
 
 			<EditCategoryDialog
 				category={editingCategory}
 				onClose={() => setEditingCategory(null)}
-				onSuccess={loadData}
 			/>
 		</div>
 	);

@@ -1,16 +1,21 @@
 "use client";
 
 import { motion } from "motion/react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { fadeUp, stagger } from "@/lib/animations";
-import type { authClient } from "@/lib/auth-client";
-import { BASE, type Entry } from "@/lib/finance";
+import type { Entry } from "@/lib/finance";
+import { useEntries } from "@/lib/queries";
 import { AppHeader } from "../app-header";
+import { BalanceEvolutionChart } from "./balance-evolution-chart";
 import { EfficiencyScoreCard } from "./efficiency-score-card";
 import type { CategoryData } from "./expense-distribution-card";
 import { ExpenseDistributionCard } from "./expense-distribution-card";
+import { IncomeVsExpensesChart } from "./income-vs-expenses-chart";
+import { KpiSummaryCards } from "./kpi-summary-cards";
 import { MonthlyComparisonCard } from "./monthly-comparison-card";
 import { type Period, PeriodSelector } from "./period-selector";
+import { SectionHeader } from "./section-header";
+import { SpendingByWeekdayChart } from "./spending-by-weekday-chart";
 
 function filterByPeriod(entries: Entry[], period: Period): Entry[] {
 	const now = new Date();
@@ -47,25 +52,9 @@ function getCategoryBreakdown(entries: Entry[]): CategoryData[] {
 	return [...map.values()].sort((a, b) => b.total - a.total);
 }
 
-export default function Analytics({
-	session: _session,
-}: {
-	session: typeof authClient.$Infer.Session;
-}) {
-	const [entries, setEntries] = useState<Entry[]>([]);
-	const [loading, setLoading] = useState(true);
+export default function Analytics() {
+	const { data: entries = [], isLoading: loading } = useEntries();
 	const [period, setPeriod] = useState<Period>("month");
-
-	const loadData = useCallback(async () => {
-		setLoading(true);
-		const res = await fetch(`${BASE}/entries`, { credentials: "include" });
-		if (res.ok) setEntries(await res.json());
-		setLoading(false);
-	}, []);
-
-	useEffect(() => {
-		loadData();
-	}, [loadData]);
 
 	const periodEntries = useMemo(
 		() => filterByPeriod(entries, period),
@@ -81,6 +70,16 @@ export default function Analytics({
 		(sum, category) => sum + category.total,
 		0,
 	);
+
+	const totalIncome = useMemo(
+		() =>
+			periodEntries
+				.filter((e) => e.type === "income")
+				.reduce((sum, e) => sum + e.amountCents, 0),
+		[periodEntries],
+	);
+
+	const netBalance = totalIncome - totalExpense;
 
 	const currentMonthPrefix = new Date().toISOString().slice(0, 7);
 	const lastMonthDate = new Date();
@@ -110,6 +109,22 @@ export default function Analytics({
 			? ((currentMonthExpense - lastMonthExpense) / lastMonthExpense) * 100
 			: 0;
 
+	const currentMonthCategoryData = useMemo(
+		() =>
+			getCategoryBreakdown(
+				entries.filter((e) => e.date.startsWith(currentMonthPrefix)),
+			),
+		[entries, currentMonthPrefix],
+	);
+
+	const lastMonthCategoryData = useMemo(
+		() =>
+			getCategoryBreakdown(
+				entries.filter((e) => e.date.startsWith(lastMonthPrefix)),
+			),
+		[entries, lastMonthPrefix],
+	);
+
 	const monthIncome = entries
 		.filter(
 			(entry) =>
@@ -132,6 +147,37 @@ export default function Analytics({
 
 	const topCategory = categoryData[0];
 
+	const last6MonthsData = useMemo(
+		() =>
+			Array.from({ length: 6 }, (_, i) => {
+				const date = new Date();
+				date.setMonth(date.getMonth() - (5 - i));
+				const prefix = date.toISOString().slice(0, 7);
+				const monthEntries = entries.filter((e) => e.date.startsWith(prefix));
+				return {
+					month: date
+						.toLocaleString("pt-BR", { month: "short" })
+						.replace(".", ""),
+					income: monthEntries
+						.filter((e) => e.type === "income")
+						.reduce((s, e) => s + e.amountCents, 0),
+					expense: monthEntries
+						.filter((e) => e.type === "expense")
+						.reduce((s, e) => s + e.amountCents, 0),
+				};
+			}),
+		[entries],
+	);
+
+	const spendingByWeekday = useMemo(() => {
+		const labels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+		const totals = new Array(7).fill(0) as number[];
+		for (const entry of periodEntries.filter((e) => e.type === "expense")) {
+			totals[new Date(`${entry.date}T12:00:00`).getDay()] += entry.amountCents;
+		}
+		return labels.map((day, i) => ({ day, total: totals[i] ?? 0 }));
+	}, [periodEntries]);
+
 	return (
 		<motion.div
 			variants={stagger}
@@ -146,21 +192,16 @@ export default function Analytics({
 				<PeriodSelector period={period} onChange={setPeriod} />
 			</motion.div>
 
+			{/* ── Resumo ── */}
 			<motion.div variants={fadeUp}>
-				<ExpenseDistributionCard
-					categoryData={categoryData}
-					totalExpense={totalExpense}
-					loading={loading}
-				/>
+				<SectionHeader label="Resumo" />
 			</motion.div>
 
 			<motion.div variants={fadeUp}>
-				<MonthlyComparisonCard
-					currentMonthExpense={currentMonthExpense}
-					lastMonthExpense={lastMonthExpense}
-					currentMonthBarPercentage={currentMonthBarPercentage}
-					lastMonthBarPercentage={lastMonthBarPercentage}
-					expensePercentageChange={expensePercentageChange}
+				<KpiSummaryCards
+					totalIncome={totalIncome}
+					totalExpense={totalExpense}
+					netBalance={netBalance}
 					loading={loading}
 				/>
 			</motion.div>
@@ -172,6 +213,54 @@ export default function Analytics({
 					monthIncome={monthIncome}
 					loading={loading}
 				/>
+			</motion.div>
+
+			{/* ── Análise Detalhada ── */}
+			<motion.div variants={fadeUp}>
+				<SectionHeader label="Análise Detalhada" />
+			</motion.div>
+
+			<motion.div variants={fadeUp}>
+				<ExpenseDistributionCard
+					categoryData={categoryData}
+					totalExpense={totalExpense}
+					loading={loading}
+				/>
+			</motion.div>
+
+			<motion.div variants={fadeUp}>
+				<IncomeVsExpensesChart data={last6MonthsData} loading={loading} />
+			</motion.div>
+
+			<motion.div variants={fadeUp}>
+				<BalanceEvolutionChart data={last6MonthsData} loading={loading} />
+			</motion.div>
+
+			<motion.div variants={fadeUp}>
+				<MonthlyComparisonCard
+					currentMonthExpense={currentMonthExpense}
+					lastMonthExpense={lastMonthExpense}
+					currentMonthBarPercentage={currentMonthBarPercentage}
+					lastMonthBarPercentage={lastMonthBarPercentage}
+					expensePercentageChange={expensePercentageChange}
+					currentMonthCategoryData={currentMonthCategoryData}
+					lastMonthCategoryData={lastMonthCategoryData}
+					loading={loading}
+				/>
+			</motion.div>
+
+			<motion.div variants={fadeUp}>
+				<SpendingByWeekdayChart data={spendingByWeekday} loading={loading} />
+			</motion.div>
+
+			<motion.div variants={fadeUp}>
+				<button
+					type="button"
+					onClick={() => window.print()}
+					className="no-print flex w-full items-center justify-center gap-2 rounded-xl border bg-card py-3 font-semibold text-sm transition-colors hover:bg-muted/30"
+				>
+					Gerar Relatório
+				</button>
 			</motion.div>
 		</motion.div>
 	);
