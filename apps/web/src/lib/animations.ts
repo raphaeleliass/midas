@@ -10,16 +10,20 @@ export const stagger: Variants = {
 	show: { transition: { staggerChildren: 0.08 } },
 };
 
-export const filterTransition = {
-	initial: { opacity: 0, y: 8 },
+export const filterVariants: Variants = {
+	initial: (shouldAnimate: boolean) =>
+		shouldAnimate ? { opacity: 0, y: 8 } : { opacity: 1, y: 0 },
 	animate: {
 		opacity: 1,
 		y: 0,
 		transition: { duration: 0.22, ease: [0.4, 0, 0.2, 1] },
 	},
-	exit: {
-		opacity: 0,
-		y: -6,
-		transition: { duration: 0.16, ease: [0.4, 0, 1, 1] },
-	},
-} as const;
+	exit: (shouldAnimate: boolean) =>
+		shouldAnimate
+			? {
+					opacity: 0,
+					y: -6,
+					transition: { duration: 0.16, ease: [0.4, 0, 1, 1] },
+				}
+			: { opacity: 1, y: 0, transition: { duration: 0 } },
+};
