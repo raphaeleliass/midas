@@ -1,6 +1,6 @@
 import type { DbType } from "@midas/db";
 import { category } from "@midas/db";
-import { and, count, eq, isNull, or } from "drizzle-orm";
+import { and, eq, isNull, or } from "drizzle-orm";
 import type { TCreateCategory, TUpdateCategory } from "./categories.types";
 
 export class CategoriesRepository {
@@ -9,14 +9,6 @@ export class CategoriesRepository {
 	constructor(db: DbType) {
 		this.db = db;
 	}
-
-	countByUser = async (userId: string) => {
-		const [result] = await this.db
-			.select({ count: count() })
-			.from(category)
-			.where(eq(category.userId, userId));
-		return result?.count ?? 0;
-	};
 
 	create = async (data: TCreateCategory, userId: string) => {
 		const [newCategory] = await this.db
