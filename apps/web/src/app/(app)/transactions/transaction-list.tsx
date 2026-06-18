@@ -20,7 +20,7 @@ import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { filterVariants } from "@/lib/animations";
+import { filterTransition } from "@/lib/animations";
 import { centsToBrl, type Entry, formatDate } from "@/lib/finance";
 import { EntryIcon } from "../entry-icon";
 
@@ -53,8 +53,6 @@ export function TransactionList({
 	onDelete: (id: string) => void;
 }) {
 	const [filter, setFilter] = useState<"all" | "income" | "expense">("all");
-	const [animateTransition, setAnimateTransition] = useState(false);
-	const visitedFilters = useRef(new Set<string>(["all"]));
 	const [shimmeringId, setShimmeringId] = useState<string | null>(null);
 	const itemRefs = useRef<Record<string, HTMLLIElement | null>>({});
 	const highlightId = useSearchParams().get("highlight");
@@ -94,13 +92,7 @@ export function TransactionList({
 	return (
 		<Tabs
 			value={filter}
-			onValueChange={(v) => {
-				const newFilter = v as "all" | "income" | "expense";
-				const isFirstVisit = !visitedFilters.current.has(newFilter);
-				visitedFilters.current.add(newFilter);
-				setAnimateTransition(isFirstVisit);
-				setFilter(newFilter);
-			}}
+			onValueChange={(v) => setFilter(v as "all" | "income" | "expense")}
 		>
 			<TabsList className="mb-4 w-full">
 				<TabsTrigger value="all" className="flex-1">
@@ -115,14 +107,12 @@ export function TransactionList({
 			</TabsList>
 
 			<TabsContent value={filter}>
-				<AnimatePresence mode="wait" initial={false} custom={animateTransition}>
+				<AnimatePresence mode="wait" initial={false}>
 					<motion.div
 						key={filter}
-						custom={animateTransition}
-						variants={filterVariants}
-						initial="initial"
-						animate="animate"
-						exit="exit"
+						initial={filterTransition.initial}
+						animate={filterTransition.animate}
+						exit={filterTransition.exit}
 					>
 						{loading ? (
 							<div className="space-y-4">
