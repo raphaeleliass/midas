@@ -4,6 +4,7 @@ import { motion } from "motion/react";
 import { useMemo, useState } from "react";
 import { fadeUp, stagger } from "@/lib/animations";
 import type { Entry } from "@/lib/finance";
+import { useFirstVisit } from "@/lib/hooks/use-first-visit";
 import { useEntries } from "@/lib/queries";
 import { AppHeader } from "../app-header";
 import { BalanceEvolutionChart } from "./balance-evolution-chart";
@@ -53,6 +54,7 @@ function getCategoryBreakdown(entries: Entry[]): CategoryData[] {
 }
 
 export default function Analytics() {
+	const isFirstVisit = useFirstVisit("analytics");
 	const { data: entries = [], isLoading: loading } = useEntries();
 	const [period, setPeriod] = useState<Period>("month");
 
@@ -181,7 +183,7 @@ export default function Analytics() {
 	return (
 		<motion.div
 			variants={stagger}
-			initial="hidden"
+			initial={isFirstVisit ? "hidden" : "show"}
 			animate="show"
 			className="mx-auto max-w-2xl space-y-4 px-4 pt-4 pb-28 md:px-6 md:pt-6"
 		>

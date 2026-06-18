@@ -6,6 +6,7 @@ import { motion } from "motion/react";
 import { useMemo, useState } from "react";
 import { fadeUp, stagger } from "@/lib/animations";
 import { authClient } from "@/lib/auth-client";
+import { useFirstVisit } from "@/lib/hooks/use-first-visit";
 import { useSubscription } from "@/lib/hooks/use-subscription";
 import { useCategories, useDeleteCategory, useEntries } from "@/lib/queries";
 import { AppHeader } from "../app-header";
@@ -24,6 +25,7 @@ import { TrendCard } from "./trend-chart";
 const SAVINGS_GOAL_CENTS = 200_000;
 
 export default function Dashboard() {
+	const isFirstVisit = useFirstVisit("dashboard");
 	const { data: sessionData } = authClient.useSession();
 	const { data: entries = [], isLoading: entriesLoading } = useEntries();
 	const { data: categories = [], isLoading: categoriesLoading } =
@@ -95,7 +97,7 @@ export default function Dashboard() {
 		<div className="relative min-h-full">
 			<motion.div
 				variants={stagger}
-				initial="hidden"
+				initial={isFirstVisit ? "hidden" : "show"}
 				animate="show"
 				className="mx-auto max-w-2xl space-y-4 px-4 pt-4 pb-28 md:px-6 md:pt-6"
 			>
