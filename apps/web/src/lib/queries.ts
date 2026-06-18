@@ -93,9 +93,9 @@ export function useDeleteEntry() {
 	});
 }
 
-export class CategoryLimitError extends Error {
+export class PremiumRequiredError extends Error {
 	constructor() {
-		super("CATEGORY_LIMIT_REACHED");
+		super("PREMIUM_REQUIRED");
 	}
 }
 
@@ -111,8 +111,8 @@ export function useCreateCategory() {
 			});
 			if (res.status === 403) {
 				const body = await res.json().catch(() => ({}));
-				if (body?.error === "CATEGORY_LIMIT_REACHED") {
-					throw new CategoryLimitError();
+				if (body?.error === "PREMIUM_REQUIRED") {
+					throw new PremiumRequiredError();
 				}
 			}
 			if (!res.ok) throw new Error("Falha ao criar categoria");

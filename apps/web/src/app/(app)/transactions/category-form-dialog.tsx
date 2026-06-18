@@ -12,8 +12,11 @@ import { Label } from "@midas/ui/components/label";
 import { cn } from "@midas/ui/lib/utils";
 import { useState } from "react";
 import { CATEGORY_ICONS } from "@/lib/category-icons";
-import { useCreateCheckout } from "@/lib/hooks/use-subscription";
-import { CategoryLimitError, useCreateCategory } from "@/lib/queries";
+import {
+	useCreateCheckout,
+	useSubscription,
+} from "@/lib/hooks/use-subscription";
+import { useCreateCategory } from "@/lib/queries";
 
 export function CategoryFormDialog({
 	open,
@@ -24,8 +27,10 @@ export function CategoryFormDialog({
 }) {
 	const createCategory = useCreateCategory();
 	const checkout = useCreateCheckout();
+	const { data: subscription } = useSubscription();
 	const [form, setForm] = useState({ name: "", icon: "" });
-	const limitReached = createCategory.error instanceof CategoryLimitError;
+
+	const isPremium = subscription?.isPremium ?? false;
 
 	async function handleSubmit(e: React.FormEvent) {
 		e.preventDefault();
@@ -43,11 +48,11 @@ export function CategoryFormDialog({
 				<DialogHeader>
 					<DialogTitle>Nova categoria</DialogTitle>
 				</DialogHeader>
-				{limitReached ? (
+				{!isPremium ? (
 					<div className="space-y-3 py-2">
 						<p className="text-muted-foreground text-sm">
-							Você atingiu o limite de 5 categorias do plano gratuito. Faça
-							upgrade para criar categorias ilimitadas.
+							Criar categorias personalizadas é exclusivo do plano Premium.
+							Assine para organizar seus lançamentos do seu jeito.
 						</p>
 						<Button
 							onClick={() => checkout.mutate()}
