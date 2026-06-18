@@ -26,7 +26,12 @@ import { cn } from "@midas/ui/lib/utils";
 import { CalendarIcon, Check, Plus, Settings2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { CategoryIcon } from "@/lib/category-icons";
-import { brlToCents, type Category, type Entry } from "@/lib/finance";
+import {
+	applyAmountMask,
+	brlToCents,
+	type Category,
+	type Entry,
+} from "@/lib/finance";
 import { useUpdateEntry } from "@/lib/queries";
 
 export function EditEntryDialog({
@@ -56,7 +61,7 @@ export function EditEntryDialog({
 			setForm({
 				type: entry.type,
 				title: entry.title,
-				amountBrl: (entry.amountCents / 100).toFixed(2).replace(".", ","),
+				amountBrl: applyAmountMask(String(entry.amountCents)),
 				date: entry.date.slice(0, 10),
 				categoryIds: entry.entryCategories.map((ec) => ec.categoryId),
 			});
@@ -162,9 +167,13 @@ export function EditEntryDialog({
 						<Input
 							value={form.amountBrl}
 							onChange={(e) =>
-								setForm((prev) => ({ ...prev, amountBrl: e.target.value }))
+								setForm((prev) => ({
+									...prev,
+									amountBrl: applyAmountMask(e.target.value),
+								}))
 							}
 							placeholder="0,00"
+							inputMode="numeric"
 							required
 						/>
 					</div>

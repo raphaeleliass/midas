@@ -40,7 +40,17 @@ export function centsToBrl(cents: number) {
 }
 
 export function brlToCents(value: string) {
-	return Math.round(Number.parseFloat(value.replace(",", ".")) * 100);
+	const normalized = value.replace(/\./g, "").replace(",", ".");
+	return Math.round(Number.parseFloat(normalized) * 100);
+}
+
+export function applyAmountMask(input: string): string {
+	const digits = input.replace(/\D/g, "");
+	if (!digits) return "";
+	return new Intl.NumberFormat("pt-BR", {
+		minimumFractionDigits: 2,
+		maximumFractionDigits: 2,
+	}).format(Number.parseInt(digits, 10) / 100);
 }
 
 export function formatDate(iso: string) {

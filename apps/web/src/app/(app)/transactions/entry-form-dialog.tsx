@@ -28,7 +28,7 @@ import { CalendarIcon, Check, Plus, Settings2 } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { CategoryIcon } from "@/lib/category-icons";
-import { brlToCents, type Category } from "@/lib/finance";
+import { applyAmountMask, brlToCents, type Category } from "@/lib/finance";
 import { useCreateEntry } from "@/lib/queries";
 
 const entrySchema = z.object({
@@ -181,9 +181,13 @@ export function EntryFormDialog({
 							<Field data-invalid={fieldState.invalid}>
 								<FieldLabel htmlFor="entry-amount">Valor (R$)</FieldLabel>
 								<Input
-									{...field}
+									value={field.value}
+									onChange={(e) =>
+										field.onChange(applyAmountMask(e.target.value))
+									}
 									id="entry-amount"
 									placeholder="0,00"
+									inputMode="numeric"
 									aria-invalid={fieldState.invalid}
 								/>
 								{fieldState.invalid && (
