@@ -18,7 +18,8 @@ import {
 import { cn } from "@midas/ui/lib/utils";
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { centsToBrl, type Entry, formatDate } from "@/lib/finance";
 import { EntryIcon } from "../entry-icon";
 
@@ -51,6 +52,27 @@ export function TransactionList({
 	onDelete: (id: string) => void;
 }) {
 	const [filter, setFilter] = useState<"all" | "income" | "expense">("all");
+	const [shimmeringId, setShimmeringId] = useState<string | null>(null);
+	const itemRefs = useRef<Record<string, HTMLLIElement | null>>({});
+	const highlightId = useSearchParams().get("highlight");
+	const router = useRouter();
+
+	useEffect(() => {
+		if (!highlightId || loading) return;
+		setFilter("all");
+		const raf = requestAnimationFrame(() => {
+			const el = itemRefs.current[highlightId];
+			if (!el) return;
+			el.scrollIntoView({ behavior: "smooth", block: "center" });
+			setShimmeringId(highlightId);
+			const timer = setTimeout(() => {
+				setShimmeringId(null);
+				router.replace("/transactions", { scroll: false });
+			}, 1400);
+			return () => clearTimeout(timer);
+		});
+		return () => cancelAnimationFrame(raf);
+	}, [highlightId, loading, router]);
 
 	const grouped = useMemo(() => {
 		const filtered = entries.filter(
@@ -137,6 +159,9 @@ export function TransactionList({
 													return (
 														<motion.li
 															key={entry.id}
+															ref={(el) => {
+																itemRefs.current[entry.id] = el;
+															}}
 															layout
 															initial={{ opacity: 1 }}
 															exit={{
@@ -144,7 +169,10 @@ export function TransactionList({
 																x: -24,
 																transition: { duration: 0.22, ease: "easeIn" },
 															}}
-															className="flex items-center gap-3 border-b px-4 py-3 last:border-b-0"
+															className={cn(
+																"relative flex items-center gap-3 overflow-hidden border-b px-4 py-3 transition-colors duration-300 last:border-b-0",
+																shimmeringId === entry.id && "bg-primary/5",
+															)}
 														>
 															<EntryIcon entry={entry} />
 															<div className="min-w-0 flex-1">
@@ -193,6 +221,29 @@ export function TransactionList({
 																	</DropdownMenuItem>
 																</DropdownMenuContent>
 															</DropdownMenu>
+															<AnimatePresence>
+																{shimmeringId === entry.id && (
+																	<motion.div
+																		key="shimmer"
+																		aria-hidden
+																		className="pointer-events-none absolute inset-0"
+																		initial={{ x: "-100%" }}
+																		animate={{ x: "100%" }}
+																		exit={{
+																			opacity: 0,
+																			transition: { duration: 0.15 },
+																		}}
+																		transition={{
+																			duration: 0.8,
+																			ease: "easeOut",
+																		}}
+																		style={{
+																			background:
+																				"linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.28) 50%, transparent 100%)",
+																		}}
+																	/>
+																)}
+															</AnimatePresence>
 														</motion.li>
 													);
 												})}
