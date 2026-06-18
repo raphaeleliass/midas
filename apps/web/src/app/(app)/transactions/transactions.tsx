@@ -6,6 +6,7 @@ import { motion } from "motion/react";
 import { useState } from "react";
 import { fadeUp, stagger } from "@/lib/animations";
 import type { Entry } from "@/lib/finance";
+import { useSubscription } from "@/lib/hooks/use-subscription";
 import {
 	useCategories,
 	useDeleteCategory,
@@ -21,11 +22,15 @@ import { EntryFormDialog } from "./entry-form-dialog";
 import { ManageCategoriesDialog } from "./manage-categories-dialog";
 import { TransactionList } from "./transaction-list";
 
+type CategoryFormSource = "entryForm" | "editEntry" | "manageCategories" | null;
+
 export default function Transactions() {
 	const { data: entries = [], isLoading: entriesLoading } = useEntries();
 	const { data: categories = [], isLoading: categoriesLoading } =
 		useCategories();
+	const { data: subscription } = useSubscription();
 	const loading = entriesLoading || categoriesLoading;
+	const isPremium = subscription?.isPremium ?? false;
 	const deleteEntry = useDeleteEntry();
 	const deleteCategory = useDeleteCategory();
 
@@ -36,6 +41,32 @@ export default function Transactions() {
 	const [editingCategory, setEditingCategory] = useState<
 		(typeof categories)[number] | null
 	>(null);
+	const [categoryFormSource, setCategoryFormSource] =
+		useState<CategoryFormSource>(null);
+	const [savedEditingEntry, setSavedEditingEntry] = useState<Entry | null>(null);
+
+	function openCategoryForm(source: CategoryFormSource) {
+		setCategoryFormSource(source);
+		if (source === "entryForm") setShowEntryForm(false);
+		if (source === "editEntry") {
+			setSavedEditingEntry(editingEntry);
+			setEditingEntry(null);
+		}
+		if (source === "manageCategories") setShowManageCategories(false);
+		setShowCategoryForm(true);
+	}
+
+	function handleCategoryFormOpenChange(open: boolean) {
+		setShowCategoryForm(open);
+		if (!open) {
+			if (categoryFormSource === "entryForm") setShowEntryForm(true);
+			if (categoryFormSource === "editEntry") setEditingEntry(savedEditingEntry);
+			if (categoryFormSource === "manageCategories")
+				setShowManageCategories(true);
+			setCategoryFormSource(null);
+			setSavedEditingEntry(null);
+		}
+	}
 
 	const currentMonth = new Date().toISOString().slice(0, 7);
 	const monthEntries = entries.filter((e) => e.date.startsWith(currentMonth));
@@ -98,10 +129,7 @@ export default function Transactions() {
 					setShowEntryForm(false);
 					setShowManageCategories(true);
 				}}
-				onNewCategory={() => {
-					setShowEntryForm(false);
-					setShowCategoryForm(true);
-				}}
+				onNewCategory={() => openCategoryForm("entryForm")}
 			/>
 
 			<EditEntryDialog
@@ -112,24 +140,22 @@ export default function Transactions() {
 					setEditingEntry(null);
 					setShowManageCategories(true);
 				}}
-				onNewCategory={() => {
-					setEditingEntry(null);
-					setShowCategoryForm(true);
-				}}
+				onNewCategory={() => openCategoryForm("editEntry")}
 			/>
 
 			<CategoryFormDialog
 				open={showCategoryForm}
-				onOpenChange={setShowCategoryForm}
+				onOpenChange={handleCategoryFormOpenChange}
 			/>
 
 			<ManageCategoriesDialog
 				open={showManageCategories}
 				onOpenChange={setShowManageCategories}
 				categories={categories}
+				isPremium={isPremium}
 				onEdit={setEditingCategory}
 				onDelete={(id) => deleteCategory.mutate(id)}
-				onNew={() => setShowCategoryForm(true)}
+				onNew={() => openCategoryForm("manageCategories")}
 			/>
 
 			<EditCategoryDialog

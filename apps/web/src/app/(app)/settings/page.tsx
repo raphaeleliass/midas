@@ -53,7 +53,7 @@ export default function SettingsPage() {
 							</span>
 						</div>
 						<p className="text-muted-foreground text-sm">
-							Limite de 5 categorias · Sem analytics · Sem exportação
+							Apenas categorias padrão · Sem analytics · Sem exportação
 						</p>
 						<Button
 							onClick={() => checkout.mutate()}

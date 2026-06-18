@@ -6,6 +6,7 @@ import { motion } from "motion/react";
 import { useMemo, useState } from "react";
 import { fadeUp, stagger } from "@/lib/animations";
 import { authClient } from "@/lib/auth-client";
+import { useSubscription } from "@/lib/hooks/use-subscription";
 import { useCategories, useDeleteCategory, useEntries } from "@/lib/queries";
 import { AppHeader } from "../app-header";
 import { SummaryCards } from "../summary-cards";
@@ -27,7 +28,9 @@ export default function Dashboard() {
 	const { data: entries = [], isLoading: entriesLoading } = useEntries();
 	const { data: categories = [], isLoading: categoriesLoading } =
 		useCategories();
+	const { data: subscription } = useSubscription();
 	const loading = entriesLoading || categoriesLoading;
+	const isPremium = subscription?.isPremium ?? false;
 	const deleteCategory = useDeleteCategory();
 
 	const [showEntryForm, setShowEntryForm] = useState(false);
@@ -36,6 +39,26 @@ export default function Dashboard() {
 	const [editingCategory, setEditingCategory] = useState<
 		(typeof categories)[number] | null
 	>(null);
+	const [categoryFormSource, setCategoryFormSource] = useState<
+		"entryForm" | "manageCategories" | null
+	>(null);
+
+	function openCategoryForm(source: "entryForm" | "manageCategories") {
+		setCategoryFormSource(source);
+		if (source === "entryForm") setShowEntryForm(false);
+		if (source === "manageCategories") setShowManageCategories(false);
+		setShowCategoryForm(true);
+	}
+
+	function handleCategoryFormOpenChange(open: boolean) {
+		setShowCategoryForm(open);
+		if (!open) {
+			if (categoryFormSource === "entryForm") setShowEntryForm(true);
+			if (categoryFormSource === "manageCategories")
+				setShowManageCategories(true);
+			setCategoryFormSource(null);
+		}
+	}
 
 	const totalIncome = entries
 		.filter((entry) => entry.type === "income")
@@ -145,24 +168,22 @@ export default function Dashboard() {
 					setShowEntryForm(false);
 					setShowManageCategories(true);
 				}}
-				onNewCategory={() => {
-					setShowEntryForm(false);
-					setShowCategoryForm(true);
-				}}
+				onNewCategory={() => openCategoryForm("entryForm")}
 			/>
 
 			<CategoryFormDialog
 				open={showCategoryForm}
-				onOpenChange={setShowCategoryForm}
+				onOpenChange={handleCategoryFormOpenChange}
 			/>
 
 			<ManageCategoriesDialog
 				open={showManageCategories}
 				onOpenChange={setShowManageCategories}
 				categories={categories}
+				isPremium={isPremium}
 				onEdit={setEditingCategory}
 				onDelete={(id) => deleteCategory.mutate(id)}
-				onNew={() => setShowCategoryForm(true)}
+				onNew={() => openCategoryForm("manageCategories")}
 			/>
 
 			<EditCategoryDialog
