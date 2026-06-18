@@ -82,20 +82,12 @@ export function ManageCategoriesDialog({
 					)}
 				</div>
 				{isPremium ? (
-					<Button
-						variant="outline"
-						className="w-full"
-						onClick={onNew}
-					>
+					<Button variant="outline" className="w-full" onClick={onNew}>
 						<Plus className="h-4 w-4" />
 						Nova categoria
 					</Button>
 				) : (
-					<Button
-						variant="outline"
-						className="w-full"
-						onClick={onNew}
-					>
+					<Button variant="outline" className="w-full" onClick={onNew}>
 						<Lock className="h-4 w-4" />
 						Nova categoria — Premium
 					</Button>

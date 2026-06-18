@@ -43,7 +43,9 @@ export default function Transactions() {
 	>(null);
 	const [categoryFormSource, setCategoryFormSource] =
 		useState<CategoryFormSource>(null);
-	const [savedEditingEntry, setSavedEditingEntry] = useState<Entry | null>(null);
+	const [savedEditingEntry, setSavedEditingEntry] = useState<Entry | null>(
+		null,
+	);
 
 	function openCategoryForm(source: CategoryFormSource) {
 		setCategoryFormSource(source);
@@ -60,7 +62,8 @@ export default function Transactions() {
 		setShowCategoryForm(open);
 		if (!open) {
 			if (categoryFormSource === "entryForm") setShowEntryForm(true);
-			if (categoryFormSource === "editEntry") setEditingEntry(savedEditingEntry);
+			if (categoryFormSource === "editEntry")
+				setEditingEntry(savedEditingEntry);
 			if (categoryFormSource === "manageCategories")
 				setShowManageCategories(true);
 			setCategoryFormSource(null);
