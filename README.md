@@ -80,6 +80,7 @@ BETTER_AUTH_SECRET=    # string aleatória com pelo menos 32 caracteres
 BETTER_AUTH_URL=       # http://localhost:3000
 CORS_ORIGIN=           # http://localhost:3001
 NODE_ENV=development
+NGROK_AUTHTOKEN=       # token da sua conta ngrok (necessário apenas para pnpm dev:remote)
 ```
 
 Crie `apps/web/.env`:
@@ -102,11 +103,22 @@ pnpm dev
 
 Acesse [http://localhost:3001](http://localhost:3001) no navegador.
 
+### Testar pelo celular com ngrok
+
+Instale o [ngrok CLI](https://ngrok.com/download/linux) e preencha `NGROK_AUTHTOKEN` em `apps/server/.env`. Em seguida, execute:
+
+```bash
+pnpm dev:remote
+```
+
+O comando inicia um túnel HTTPS temporário, configura a web e a API com a URL gerada e a mostra no terminal. Abra essa URL no celular. Em contas gratuitas, a URL muda a cada execução e a primeira visita pode mostrar o aviso padrão do ngrok.
+
 ## Scripts disponíveis
 
 | Comando | Descrição |
 |---------|-----------|
 | `pnpm dev` | Inicia todos os apps em modo de desenvolvimento |
+| `pnpm dev:remote` | Inicia o ambiente com um link HTTPS temporário do ngrok |
 | `pnpm dev:web` | Inicia apenas o frontend |
 | `pnpm dev:server` | Inicia apenas o backend |
 | `pnpm build` | Build de produção de todos os apps |
@@ -128,7 +140,7 @@ Browser
                                                           └─ Neon PostgreSQL
 ```
 
-A autenticação usa cookies `sameSite: none` + `secure: true` para suportar requisições entre as duas portas em desenvolvimento.
+A autenticação usa cookies seguros em HTTPS. No acesso remoto, o Next.js encaminha as rotas da API para o Hono, mantendo navegador e autenticação na mesma origem.
 
 ## UI compartilhada
 

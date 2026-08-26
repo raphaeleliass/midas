@@ -7,7 +7,28 @@ import { Redis } from "ioredis";
 
 export function createAuth() {
 	const db = createDb();
-	const redis = new Redis(env.REDIS_URL);
+	const isProduction = env.NODE_ENV === "production";
+	const useSecureCookies = env.BETTER_AUTH_URL.startsWith("https://");
+	const redis = isProduction ? new Redis(env.REDIS_URL) : null;
+
+	redis?.on("error", (error) => {
+		console.error("Better Auth Redis error", error);
+	});
+
+	const secondaryStorage = redis
+		? {
+				get: (key: string) => redis.get(key),
+				set: (key: string, value: string, ttl?: number) =>
+					ttl ? redis.set(key, value, "EX", ttl) : redis.set(key, value),
+				delete: async (key: string) => {
+					await redis.del(key);
+				},
+				getAndDelete: async (key: string) => {
+					const results = await redis.multi().get(key).del(key).exec();
+					return results?.[0]?.[1] ?? null;
+				},
+			}
+		: undefined;
 
 	return betterAuth({
 		database: drizzleAdapter(db, {
@@ -28,24 +49,18 @@ export function createAuth() {
 		secret: env.BETTER_AUTH_SECRET,
 		baseURL: env.BETTER_AUTH_URL,
 		advanced: {
-			defaultCookieAttributes: {
-				sameSite: "none",
-				secure: true,
-				httpOnly: true,
-			},
+			useSecureCookies,
+			...(isProduction
+				? {
+						defaultCookieAttributes: {
+							sameSite: "none" as const,
+							secure: true,
+							httpOnly: true,
+						},
+					}
+				: {}),
 		},
-		secondaryStorage: {
-			get: (key) => redis.get(key),
-			set: (key, value, ttl) =>
-				ttl ? redis.set(key, value, "EX", ttl) : redis.set(key, value),
-			delete: async (key) => {
-				await redis.del(key);
-			},
-			getAndDelete: async (key) => {
-				const results = await redis.multi().get(key).del(key).exec();
-				return results?.[0]?.[1] ?? null;
-			},
-		},
+		...(secondaryStorage ? { secondaryStorage } : {}),
 		plugins: [],
 	});
 }
