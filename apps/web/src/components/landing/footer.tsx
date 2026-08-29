@@ -1,43 +1,46 @@
+import { Separator } from "@midas/ui/components/separator";
 import Link from "next/link";
 
 export function Footer() {
 	return (
-		<footer className="border-white/5 border-t bg-zinc-950 py-12">
-			<div className="mx-auto max-w-6xl px-6">
-				<div className="flex flex-col items-center justify-between gap-6 md:flex-row">
-					<div>
-						<Link href="/" className="flex select-none items-center gap-1">
-							<span className="bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text font-black text-transparent text-xl">
-								M
-							</span>
-							<span className="font-semibold text-lg text-white">idas</span>
-						</Link>
-						<p className="mt-1.5 text-sm text-zinc-600">
-							Turn your finances to gold.
-						</p>
-					</div>
-
-					<nav className="flex gap-6">
-						{[
-							{ href: "/login", label: "Sign In" },
-							{ href: "/dashboard", label: "Dashboard" },
-							{ href: "#features", label: "Features" },
-						].map(({ href, label }) => (
-							<Link
-								key={href}
-								href={href}
-								className="text-sm text-zinc-500 transition-colors hover:text-zinc-300"
-							>
-								{label}
-							</Link>
-						))}
-					</nav>
+		<footer className="mx-auto w-full max-w-7xl px-5 pb-8 sm:px-8 lg:px-10">
+			<Separator />
+			<div className="flex flex-col gap-6 pt-7 sm:flex-row sm:items-center sm:justify-between">
+				<div className="flex flex-col gap-1">
+					<Link href="/" className="w-fit font-semibold tracking-[-0.035em]">
+						Midas
+					</Link>
+					<p className="text-muted-foreground text-sm">
+						Finanças pessoais com clareza.
+					</p>
 				</div>
-
-				<div className="mt-8 border-white/5 border-t pt-8 text-center text-xs text-zinc-700">
-					© {new Date().getFullYear()} Midas. All rights reserved.
-				</div>
+				<nav
+					aria-label="Links do rodapé"
+					className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm"
+				>
+					<a
+						href="#product"
+						className="text-muted-foreground transition-colors hover:text-foreground"
+					>
+						Produto
+					</a>
+					<a
+						href="#features"
+						className="text-muted-foreground transition-colors hover:text-foreground"
+					>
+						Recursos
+					</a>
+					<Link
+						href="/login"
+						className="text-muted-foreground transition-colors hover:text-foreground"
+					>
+						Entrar
+					</Link>
+				</nav>
 			</div>
+			<p className="landing-data mt-8 text-[11px] text-muted-foreground uppercase tracking-[0.12em]">
+				© {new Date().getFullYear()} Midas
+			</p>
 		</footer>
 	);
 }

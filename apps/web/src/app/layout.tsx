@@ -10,9 +10,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-	title: "Midas — Personal Finance Tracker",
+	title: "Midas — Finanças pessoais com clareza",
 	description:
-		"Track income and expenses with precision. Organize every dollar into smart categories and gain complete clarity over your financial life.",
+		"Registre receitas e despesas, acompanhe seu saldo e entenda seus hábitos financeiros em um só lugar.",
 };
 
 export default function RootLayout({
@@ -21,7 +21,7 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="en" suppressHydrationWarning>
+		<html lang="pt-BR" suppressHydrationWarning>
 			<body className={`${inter.variable} antialiased`}>
 				<Providers>{children}</Providers>
 			</body>

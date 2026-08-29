@@ -1,5 +1,67 @@
 @import "@midas/ui/globals.css";
 
+.landing-shell.dark {
+	--background: oklch(0.075 0 0);
+	--foreground: oklch(0.985 0 0);
+	--card: oklch(0.115 0 0);
+	--card-foreground: oklch(0.985 0 0);
+	--popover: oklch(0.115 0 0);
+	--popover-foreground: oklch(0.985 0 0);
+	--primary: oklch(0.985 0 0);
+	--primary-foreground: oklch(0.12 0 0);
+	--secondary: oklch(0.16 0 0);
+	--secondary-foreground: oklch(0.985 0 0);
+	--muted: oklch(0.155 0 0);
+	--muted-foreground: oklch(0.68 0 0);
+	--accent: oklch(0.2 0 0);
+	--accent-foreground: oklch(0.985 0 0);
+	--border: oklch(1 0 0 / 12%);
+	--input: oklch(1 0 0 / 16%);
+	--ring: oklch(0.78 0 0);
+	min-width: 0;
+	overflow-x: clip;
+	font-family: var(--font-landing), sans-serif;
+	color-scheme: dark;
+}
+
+html:has(.landing-shell) {
+	scroll-behavior: smooth;
+}
+
+.landing-light {
+	--background: oklch(0.985 0 0);
+	--foreground: oklch(0.12 0 0);
+	--card: oklch(1 0 0);
+	--card-foreground: oklch(0.12 0 0);
+	--primary: oklch(0.12 0 0);
+	--primary-foreground: oklch(0.985 0 0);
+	--secondary: oklch(0.94 0 0);
+	--secondary-foreground: oklch(0.16 0 0);
+	--muted: oklch(0.94 0 0);
+	--muted-foreground: oklch(0.43 0 0);
+	--accent: oklch(0.91 0 0);
+	--accent-foreground: oklch(0.12 0 0);
+	--border: oklch(0.12 0 0 / 14%);
+	--input: oklch(0.12 0 0 / 18%);
+	--ring: oklch(0.3 0 0);
+	color-scheme: light;
+}
+
+.landing-data {
+	font-family: var(--font-landing-data), monospace;
+	font-variant-numeric: tabular-nums;
+}
+
+.landing-section {
+	scroll-margin-top: 5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	html:has(.landing-shell) {
+		scroll-behavior: auto;
+	}
+}
+
 :root {
 	--background: oklch(1 0 0);
 	--foreground: oklch(0.145 0 0);
