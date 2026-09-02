@@ -1,7 +1,7 @@
 "use client";
 
-import { Button, buttonVariants } from "@midas/ui/components/button";
-import { ArrowDown, ArrowUpRight } from "lucide-react";
+import { buttonVariants } from "@midas/ui/components/button";
+import { ArrowDown } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
 import { ProductStage } from "./product-stage";
@@ -62,14 +62,6 @@ export function Hero() {
 					}}
 					className="mt-9 flex flex-col items-center gap-3 sm:flex-row"
 				>
-					<Button
-						size="lg"
-						nativeButton={false}
-						render={<Link href="/register" />}
-					>
-						Criar conta grátis
-						<ArrowUpRight data-icon="inline-end" />
-					</Button>
 					<Link
 						href="#demo"
 						className={buttonVariants({ variant: "ghost", size: "lg" })}

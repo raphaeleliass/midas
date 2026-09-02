@@ -9,6 +9,15 @@ export const env = createEnv({
 		BETTER_AUTH_URL: z.url(),
 		CORS_ORIGIN: z.url(),
 		REDIS_URL: z.string().min(1),
+		INITIAL_ADMIN_EMAILS: z
+			.string()
+			.optional()
+			.transform((value) =>
+				(value ?? "")
+					.split(",")
+					.map((email) => email.trim().toLowerCase())
+					.filter(Boolean),
+			),
 		NODE_ENV: z
 			.enum(["development", "production", "test"])
 			.default("development"),

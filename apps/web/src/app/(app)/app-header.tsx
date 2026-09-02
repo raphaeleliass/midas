@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { fadeUp } from "@/lib/animations";
@@ -9,14 +9,9 @@ import { SearchBar } from "./search-bar";
 interface AppHeaderProps {
 	title: string;
 	subtitle?: string;
-	showBell?: boolean;
 }
 
-export function AppHeader({
-	title,
-	subtitle,
-	showBell = true,
-}: AppHeaderProps) {
+export function AppHeader({ title, subtitle }: AppHeaderProps) {
 	const [isSearchOpen, setIsSearchOpen] = useState(false);
 
 	return (
@@ -47,17 +42,7 @@ export function AppHeader({
 								<p className="text-[11px] text-muted-foreground">{subtitle}</p>
 							)}
 						</div>
-						<div className="flex justify-end">
-							{showBell && (
-								<button
-									type="button"
-									className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-									aria-label="Notificações"
-								>
-									<Bell className="h-4 w-4" />
-								</button>
-							)}
-						</div>
+						<div />
 					</motion.div>
 				)}
 			</AnimatePresence>

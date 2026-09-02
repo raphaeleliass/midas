@@ -1,7 +1,4 @@
-import { Button } from "@midas/ui/components/button";
 import { Separator } from "@midas/ui/components/separator";
-import { ArrowUpRight } from "lucide-react";
-import Link from "next/link";
 import { Footer } from "./footer";
 
 export function Closing() {
@@ -22,14 +19,6 @@ export function Closing() {
 							Registre sua primeira receita ou despesa e acompanhe saldo,
 							histórico e categorias em um só lugar.
 						</p>
-						<Button
-							size="lg"
-							nativeButton={false}
-							render={<Link href="/register" />}
-						>
-							Criar conta grátis
-							<ArrowUpRight data-icon="inline-end" />
-						</Button>
 					</div>
 				</div>
 

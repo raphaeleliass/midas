@@ -3,6 +3,7 @@ import * as schema from "@midas/db/schema/auth";
 import { env } from "@midas/env/server";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { admin } from "better-auth/plugins/admin";
 import { Redis } from "ioredis";
 
 export function createAuth() {
@@ -10,6 +11,7 @@ export function createAuth() {
 	const isProduction = env.NODE_ENV === "production";
 	const useSecureCookies = env.BETTER_AUTH_URL.startsWith("https://");
 	const redis = isProduction ? new Redis(env.REDIS_URL) : null;
+	const initialAdminEmails = new Set(env.INITIAL_ADMIN_EMAILS);
 
 	redis?.on("error", (error) => {
 		console.error("Better Auth Redis error", error);
@@ -45,6 +47,30 @@ export function createAuth() {
 		},
 		emailAndPassword: {
 			enabled: true,
+			disableSignUp: true,
+		},
+		rateLimit: {
+			enabled: true,
+			window: 60,
+			max: 100,
+			storage: secondaryStorage ? "secondary-storage" : "memory",
+			customRules: {
+				"/sign-in/email": { window: 60, max: 5 },
+			},
+		},
+		databaseHooks: {
+			user: {
+				create: {
+					before: async (user) => ({
+						data: {
+							...user,
+							role: initialAdminEmails.has(user.email.toLowerCase())
+								? "admin"
+								: (user.role ?? "user"),
+						},
+					}),
+				},
+			},
 		},
 		secret: env.BETTER_AUTH_SECRET,
 		baseURL: env.BETTER_AUTH_URL,
@@ -61,7 +87,7 @@ export function createAuth() {
 				: {}),
 		},
 		...(secondaryStorage ? { secondaryStorage } : {}),
-		plugins: [],
+		plugins: [admin()],
 	});
 }
 

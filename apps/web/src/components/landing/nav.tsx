@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@midas/ui/components/button";
-import { ArrowUpRight } from "lucide-react";
 import {
 	motion,
 	useMotionValueEvent,
@@ -67,11 +66,6 @@ export function LandingNav() {
 						render={<Link href="/login" />}
 					>
 						Entrar
-					</Button>
-					<Button nativeButton={false} render={<Link href="/register" />}>
-						<span className="hidden sm:inline">Criar conta grátis</span>
-						<span className="sm:hidden">Começar</span>
-						<ArrowUpRight data-icon="inline-end" />
 					</Button>
 				</div>
 			</div>

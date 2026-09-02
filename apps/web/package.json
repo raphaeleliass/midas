@@ -9,6 +9,7 @@
 	},
 	"dependencies": {
 		"@hookform/resolvers": "^5.4.0",
+		"@midas/auth": "workspace:*",
 		"@midas/env": "workspace:*",
 		"@midas/ui": "workspace:*",
 		"@react-pdf/renderer": "^4.9.0",

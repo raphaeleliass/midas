@@ -9,6 +9,7 @@ import { AccountSection } from "./account-section";
 import { AppearanceSection } from "./appearance-section";
 import { ProfileSection } from "./profile-section";
 import { SecuritySection } from "./security-section";
+import { UserManagementSection } from "./user-management-section";
 
 export default function SettingsPage() {
 	const router = useRouter();
@@ -41,6 +42,7 @@ export default function SettingsPage() {
 					<AccountSection user={session.user} />
 					<AppearanceSection />
 					<SecuritySection />
+					{session.user.role === "admin" && <UserManagementSection />}
 
 					<Button
 						variant="outline"

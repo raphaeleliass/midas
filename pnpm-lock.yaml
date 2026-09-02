@@ -133,6 +133,9 @@ importers:
       '@hookform/resolvers':
         specifier: ^5.4.0
         version: 5.4.0(react-hook-form@7.79.0(react@19.2.7))
+      '@midas/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
       '@midas/env':
         specifier: workspace:*
         version: link:../../packages/env
@@ -246,6 +249,9 @@ importers:
       '@midas/config':
         specifier: workspace:*
         version: link:../config
+      tsx:
+        specifier: ^4.19.2
+        version: 4.22.4
       typescript:
         specifier: 'catalog:'
         version: 6.0.3

@@ -10,11 +10,7 @@ import { authClient } from "@/lib/auth-client";
 
 import Loader from "./loader";
 
-export default function SignInForm({
-	onSwitchToSignUp,
-}: {
-	onSwitchToSignUp: () => void;
-}) {
+export default function SignInForm() {
 	const router = useRouter();
 	const { isPending } = authClient.useSession();
 
@@ -132,15 +128,6 @@ export default function SignInForm({
 					</Button>
 				)}
 			</form.Subscribe>
-			<div className="pt-1 text-center">
-				<Button
-					variant="link"
-					onClick={onSwitchToSignUp}
-					className="h-auto rounded-sm p-0 text-muted-foreground no-underline hover:text-foreground hover:no-underline focus-visible:ring-2 focus-visible:ring-ring"
-				>
-					Não tem uma conta? Criar conta
-				</Button>
-			</div>
 		</form>
 	);
 }

@@ -2,17 +2,9 @@
 
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-
 import SignInForm from "@/components/sign-in-form";
-import SignUpForm from "@/components/sign-up-form";
 
-type AuthMode = "signin" | "signup";
-
-export function AuthPage({ mode }: { mode: AuthMode }) {
-	const router = useRouter();
-	const isSignIn = mode === "signin";
-
+export function AuthPage() {
 	return (
 		<main className="min-h-svh bg-background px-5 py-5 text-foreground sm:px-8 sm:py-7">
 			<header className="mx-auto flex w-full max-w-5xl items-center justify-between">
@@ -35,20 +27,14 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
 				<div className="w-full max-w-xl">
 					<div className="mb-9 text-center sm:mb-10">
 						<h1 className="font-semibold text-3xl tracking-[-0.05em] sm:text-4xl">
-							{isSignIn ? "Entrar" : "Crie sua conta"}
+							Entrar
 						</h1>
 						<p className="mt-3 text-muted-foreground text-sm sm:text-base">
-							{isSignIn
-								? "Use suas credenciais Midas para continuar."
-								: "Comece a organizar suas finanças com clareza."}
+							Use suas credenciais Midas para continuar.
 						</p>
 					</div>
 
-					{isSignIn ? (
-						<SignInForm onSwitchToSignUp={() => router.replace("/register")} />
-					) : (
-						<SignUpForm onSwitchToSignIn={() => router.replace("/login")} />
-					)}
+					<SignInForm />
 				</div>
 			</section>
 		</main>

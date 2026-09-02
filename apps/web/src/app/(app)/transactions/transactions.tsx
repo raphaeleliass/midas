@@ -87,7 +87,7 @@ export default function Transactions() {
 				animate="show"
 				className="mx-auto max-w-2xl space-y-4 px-4 pt-4 pb-28 md:px-6 md:pt-6"
 			>
-				<AppHeader title="Transações" showBell={false} />
+				<AppHeader title="Transações" />
 
 				<motion.div variants={fadeUp}>
 					<SummaryCards
