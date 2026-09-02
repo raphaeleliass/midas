@@ -14,7 +14,6 @@ import { useState } from "react";
 const NAV_ITEMS = [
 	{ href: "#product", label: "Produto" },
 	{ href: "#features", label: "Recursos" },
-	{ href: "#premium", label: "Premium" },
 ];
 
 export function LandingNav() {
@@ -69,7 +68,7 @@ export function LandingNav() {
 					>
 						Entrar
 					</Button>
-					<Button nativeButton={false} render={<Link href="/login" />}>
+					<Button nativeButton={false} render={<Link href="/register" />}>
 						<span className="hidden sm:inline">Criar conta grátis</span>
 						<span className="sm:hidden">Começar</span>
 						<ArrowUpRight data-icon="inline-end" />

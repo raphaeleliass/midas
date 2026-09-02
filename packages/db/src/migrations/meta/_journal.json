@@ -1,27 +1,34 @@
 {
-	"version": "7",
-	"dialect": "postgresql",
-	"entries": [
-		{
-			"idx": 0,
-			"version": "7",
-			"when": 1781229550035,
-			"tag": "0000_faithful_husk",
-			"breakpoints": true
-		},
-		{
-			"idx": 1,
-			"version": "7",
-			"when": 1781406043318,
-			"tag": "0001_noisy_screwball",
-			"breakpoints": true
-		},
-		{
-			"idx": 2,
-			"version": "7",
-			"when": 1781711295542,
-			"tag": "0002_wonderful_beast",
-			"breakpoints": true
-		}
-	]
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1781229550035,
+      "tag": "0000_faithful_husk",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1781406043318,
+      "tag": "0001_noisy_screwball",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1781711295542,
+      "tag": "0002_wonderful_beast",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1788347248638,
+      "tag": "0003_remove_subscription",
+      "breakpoints": true
+    }
+  ]
 }

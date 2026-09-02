@@ -17,10 +17,6 @@ const nextConfig: NextConfig = {
 				source: "/categories/:path*",
 				destination: "http://localhost:3000/categories/:path*",
 			},
-			{
-				source: "/billing/:path*",
-				destination: "http://localhost:3000/billing/:path*",
-			},
 		];
 	},
 	typedRoutes: true,

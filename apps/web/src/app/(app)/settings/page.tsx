@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { AccountSection } from "./account-section";
 import { AppearanceSection } from "./appearance-section";
-import { PlanSection } from "./plan-section";
 import { ProfileSection } from "./profile-section";
 import { SecuritySection } from "./security-section";
 
@@ -40,7 +39,6 @@ export default function SettingsPage() {
 				<>
 					<ProfileSection user={session.user} />
 					<AccountSection user={session.user} />
-					<PlanSection />
 					<AppearanceSection />
 					<SecuritySection />
 

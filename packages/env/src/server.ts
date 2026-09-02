@@ -9,8 +9,6 @@ export const env = createEnv({
 		BETTER_AUTH_URL: z.url(),
 		CORS_ORIGIN: z.url(),
 		REDIS_URL: z.string().min(1),
-		ABACATEPAY_API_KEY: z.string().min(1),
-		ABACATEPAY_PRODUCT_ID: z.string().min(1),
 		NODE_ENV: z
 			.enum(["development", "production", "test"])
 			.default("development"),

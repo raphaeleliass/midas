@@ -45,8 +45,6 @@ app.use("/entries", authMiddleware);
 app.use("/entries/*", authMiddleware);
 app.use("/categories", authMiddleware);
 app.use("/categories/*", authMiddleware);
-app.use("/billing/checkout", authMiddleware);
-app.use("/billing/status", authMiddleware);
 
 app.onError(errorMiddleware);
 
@@ -70,7 +68,6 @@ app.doc("doc", {
 	tags: [
 		{ name: "Entries", description: "Registro de gastos e receitas" },
 		{ name: "Categories", description: "Categorias de entradas" },
-		{ name: "Billing", description: "Assinatura e status premium" },
 	],
 });
 

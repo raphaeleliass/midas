@@ -1,6 +1,5 @@
 "use client";
 
-import { Badge } from "@midas/ui/components/badge";
 import {
 	ChartNoAxesCombined,
 	ChartSpline,
@@ -24,7 +23,6 @@ type Chapter = {
 	description: string;
 	mode: ProductView;
 	icon: LucideIcon;
-	premium?: boolean;
 };
 
 const CHAPTERS: Chapter[] = [
@@ -51,7 +49,6 @@ const CHAPTERS: Chapter[] = [
 			"Compare períodos, acompanhe a evolução do saldo e veja quais categorias concentram seus gastos.",
 		mode: "analytics",
 		icon: ChartSpline,
-		premium: true,
 	},
 ];
 
@@ -64,7 +61,6 @@ function ChapterCopy({ chapter }: { chapter: Chapter }) {
 				<p className="landing-data text-xs uppercase tracking-[0.16em]">
 					{chapter.eyebrow}
 				</p>
-				{chapter.premium ? <Badge variant="outline">Premium</Badge> : null}
 			</div>
 			<h3 className="mt-6 text-balance font-medium text-4xl leading-[0.98] tracking-[-0.05em] sm:text-6xl">
 				{chapter.title}

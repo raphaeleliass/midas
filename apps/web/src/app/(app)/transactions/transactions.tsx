@@ -7,7 +7,6 @@ import { useState } from "react";
 import { fadeUp, stagger } from "@/lib/animations";
 import type { Entry } from "@/lib/finance";
 import { useFirstVisit } from "@/lib/hooks/use-first-visit";
-import { useSubscription } from "@/lib/hooks/use-subscription";
 import {
 	useCategories,
 	useDeleteCategory,
@@ -30,9 +29,7 @@ export default function Transactions() {
 	const { data: entries = [], isLoading: entriesLoading } = useEntries();
 	const { data: categories = [], isLoading: categoriesLoading } =
 		useCategories();
-	const { data: subscription } = useSubscription();
 	const loading = entriesLoading || categoriesLoading;
-	const isPremium = subscription?.isPremium ?? false;
 	const deleteEntry = useDeleteEntry();
 	const deleteCategory = useDeleteCategory();
 
@@ -157,7 +154,6 @@ export default function Transactions() {
 				open={showManageCategories}
 				onOpenChange={setShowManageCategories}
 				categories={categories}
-				isPremium={isPremium}
 				onEdit={setEditingCategory}
 				onDelete={(id) => deleteCategory.mutate(id)}
 				onNew={() => openCategoryForm("manageCategories")}
