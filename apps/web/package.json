@@ -11,6 +11,7 @@
 		"@hookform/resolvers": "^5.4.0",
 		"@midas/env": "workspace:*",
 		"@midas/ui": "workspace:*",
+		"@react-pdf/renderer": "^4.9.0",
 		"@remotion/player": "^4.0.517",
 		"@tanstack/react-form": "^1.28.0",
 		"@tanstack/react-query": "^5.101.0",

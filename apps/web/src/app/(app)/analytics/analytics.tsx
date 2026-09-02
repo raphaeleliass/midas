@@ -16,6 +16,7 @@ import { KpiSummaryCards } from "./kpi-summary-cards";
 import { MonthlyComparisonCard } from "./monthly-comparison-card";
 import { type Period, PeriodSelector } from "./period-selector";
 import { SectionHeader } from "./section-header";
+import { ReportDownloadButton } from "./report-download-button";
 import { SpendingByWeekdayChart } from "./spending-by-weekday-chart";
 
 function filterByPeriod(entries: Entry[], period: Period): Entry[] {
@@ -256,13 +257,7 @@ export default function Analytics() {
 			</motion.div>
 
 			<motion.div variants={fadeUp}>
-				<button
-					type="button"
-					onClick={() => window.print()}
-					className="no-print flex w-full items-center justify-center gap-2 rounded-xl border bg-card py-3 font-semibold text-sm transition-colors hover:bg-muted/30"
-				>
-					Gerar Relatório
-				</button>
+				<ReportDownloadButton entries={entries} period={period} />
 			</motion.div>
 		</motion.div>
 	);
