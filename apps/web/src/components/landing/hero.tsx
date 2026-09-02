@@ -65,7 +65,7 @@ export function Hero() {
 					<Button
 						size="lg"
 						nativeButton={false}
-						render={<Link href="/login" />}
+						render={<Link href="/register" />}
 					>
 						Criar conta grátis
 						<ArrowUpRight data-icon="inline-end" />
