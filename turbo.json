@@ -10,7 +10,9 @@
 				"BETTER_AUTH_SECRET",
 				"BETTER_AUTH_URL",
 				"CORS_ORIGIN",
-				"REDIS_URL"
+				"REDIS_URL",
+				"INITIAL_ADMIN_EMAILS",
+				"NODE_ENV"
 			],
 			"outputs": ["dist/**", ".next/**", "!.next/cache/**"]
 		},

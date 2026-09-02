@@ -24,6 +24,14 @@ const server = {
 
 export const env = createEnv<undefined, typeof server>({
 	server,
-	runtimeEnv: process.env,
+	runtimeEnv: {
+		DATABASE_URL: process.env.DATABASE_URL,
+		BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
+		BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
+		CORS_ORIGIN: process.env.CORS_ORIGIN,
+		REDIS_URL: process.env.REDIS_URL,
+		INITIAL_ADMIN_EMAILS: process.env.INITIAL_ADMIN_EMAILS,
+		NODE_ENV: process.env.NODE_ENV,
+	},
 	emptyStringAsUndefined: true,
 });
