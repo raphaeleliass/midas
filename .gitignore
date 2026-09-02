@@ -50,6 +50,7 @@ coverage
 .playwright-mcp/
 
 # Misc
+.superpowers/
 *.tgz
 .cache
 tmp
