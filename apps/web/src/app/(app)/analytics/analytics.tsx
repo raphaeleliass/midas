@@ -15,8 +15,8 @@ import { IncomeVsExpensesChart } from "./income-vs-expenses-chart";
 import { KpiSummaryCards } from "./kpi-summary-cards";
 import { MonthlyComparisonCard } from "./monthly-comparison-card";
 import { type Period, PeriodSelector } from "./period-selector";
-import { SectionHeader } from "./section-header";
 import { ReportDownloadButton } from "./report-download-button";
+import { SectionHeader } from "./section-header";
 import { SpendingByWeekdayChart } from "./spending-by-weekday-chart";
 
 function filterByPeriod(entries: Entry[], period: Period): Entry[] {

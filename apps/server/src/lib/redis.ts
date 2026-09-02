@@ -8,7 +8,10 @@ type CacheClient = {
 };
 
 class MemoryCache implements CacheClient {
-	private readonly entries = new Map<string, { value: string; expiresAt: number }>();
+	private readonly entries = new Map<
+		string,
+		{ value: string; expiresAt: number }
+	>();
 
 	async get(key: string): Promise<string | null> {
 		const entry = this.entries.get(key);
