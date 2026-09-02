@@ -9,7 +9,23 @@ type Entry = NonNullable<Awaited<ReturnType<EntriesRepository["findById"]>>>;
 export class EntriesService {
 	constructor(private readonly repository: EntriesRepository) {}
 
+	private async assertAccessibleCategories(
+		userId: string,
+		categoryIds?: string[],
+	) {
+		if (!categoryIds) return;
+		const uniqueCategoryIds = [...new Set(categoryIds)];
+		const count = await this.repository.countAccessibleCategories(
+			userId,
+			uniqueCategoryIds,
+		);
+		if (count !== uniqueCategoryIds.length) {
+			throw new HTTPException(422, { message: "Invalid category selection" });
+		}
+	}
+
 	create = async (userId: string, data: TCreateEntry) => {
+		await this.assertAccessibleCategories(userId, data.categoryIds);
 		const result = await this.repository.create(data, userId);
 		await delCache(`entries:${userId}`);
 		return result;
@@ -44,6 +60,7 @@ export class EntriesService {
 
 		if (!found) throw new HTTPException(404);
 		if (found.userId !== userId) throw new HTTPException(403);
+		await this.assertAccessibleCategories(userId, data.categoryIds);
 
 		const result = await this.repository.update(id, data);
 		await delCache(`entries:${userId}`, `entries:${userId}:${id}`);
