@@ -37,7 +37,7 @@ app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
 app.use("*", async (c, next) => {
 	const session = await auth.api
-		.getSession({ headers: c.req.raw.headers })
+		.getSession({ headers: c.req.header() })
 		.catch(() => null);
 	if (!session) {
 		c.set("user", null);
