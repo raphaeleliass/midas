@@ -9,9 +9,10 @@ export default async function AppLayout({
 }: {
 	children: React.ReactNode;
 }) {
+	const requestHeaders = await headers();
 	const session = await authClient.getSession({
 		fetchOptions: {
-			headers: await headers(),
+			headers: { cookie: requestHeaders.get("cookie") ?? "" },
 			throw: true,
 		},
 	});

@@ -6,7 +6,7 @@ import { motion } from "motion/react";
 import { useState } from "react";
 import { fadeUp, stagger } from "@/lib/animations";
 import type { Entry } from "@/lib/finance";
-import { useSubscription } from "@/lib/hooks/use-subscription";
+import { useFirstVisit } from "@/lib/hooks/use-first-visit";
 import {
 	useCategories,
 	useDeleteCategory,
@@ -25,12 +25,11 @@ import { TransactionList } from "./transaction-list";
 type CategoryFormSource = "entryForm" | "editEntry" | "manageCategories" | null;
 
 export default function Transactions() {
+	const isFirstVisit = useFirstVisit("transactions");
 	const { data: entries = [], isLoading: entriesLoading } = useEntries();
 	const { data: categories = [], isLoading: categoriesLoading } =
 		useCategories();
-	const { data: subscription } = useSubscription();
 	const loading = entriesLoading || categoriesLoading;
-	const isPremium = subscription?.isPremium ?? false;
 	const deleteEntry = useDeleteEntry();
 	const deleteCategory = useDeleteCategory();
 
@@ -84,11 +83,11 @@ export default function Transactions() {
 		<div className="relative min-h-full">
 			<motion.div
 				variants={stagger}
-				initial="hidden"
+				initial={isFirstVisit ? "hidden" : "show"}
 				animate="show"
 				className="mx-auto max-w-2xl space-y-4 px-4 pt-4 pb-28 md:px-6 md:pt-6"
 			>
-				<AppHeader title="Transações" showBell={false} />
+				<AppHeader title="Transações" />
 
 				<motion.div variants={fadeUp}>
 					<SummaryCards
@@ -155,7 +154,6 @@ export default function Transactions() {
 				open={showManageCategories}
 				onOpenChange={setShowManageCategories}
 				categories={categories}
-				isPremium={isPremium}
 				onEdit={setEditingCategory}
 				onDelete={(id) => deleteCategory.mutate(id)}
 				onNew={() => openCategoryForm("manageCategories")}

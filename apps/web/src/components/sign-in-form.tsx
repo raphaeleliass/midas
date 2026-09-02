@@ -10,11 +10,7 @@ import { authClient } from "@/lib/auth-client";
 
 import Loader from "./loader";
 
-export default function SignInForm({
-	onSwitchToSignUp,
-}: {
-	onSwitchToSignUp: () => void;
-}) {
+export default function SignInForm() {
 	const router = useRouter();
 	const { isPending } = authClient.useSession();
 
@@ -32,7 +28,7 @@ export default function SignInForm({
 				{
 					onSuccess: () => {
 						router.push("/dashboard");
-						toast.success("Sign in successful");
+						toast.success("Login realizado com sucesso.");
 					},
 					onError: (error) => {
 						toast.error(error.error.message || error.error.statusText);
@@ -42,8 +38,10 @@ export default function SignInForm({
 		},
 		validators: {
 			onSubmit: z.object({
-				email: z.email("Invalid email address"),
-				password: z.string().min(8, "Password must be at least 8 characters"),
+				email: z.email("Informe um e-mail válido."),
+				password: z
+					.string()
+					.min(8, "A senha deve ter pelo menos 8 caracteres."),
 			}),
 		},
 	});
@@ -53,90 +51,83 @@ export default function SignInForm({
 	}
 
 	return (
-		<div className="mx-auto mt-10 w-full max-w-md p-6">
-			<h1 className="mb-6 text-center font-bold text-3xl">Welcome Back</h1>
+		<form
+			onSubmit={(e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				form.handleSubmit();
+			}}
+			className="space-y-5"
+		>
+			<form.Field name="email">
+				{(field) => (
+					<div className="space-y-2">
+						<Label htmlFor={field.name}>E-mail</Label>
+						<Input
+							id={field.name}
+							name={field.name}
+							type="email"
+							autoComplete="email"
+							placeholder="nome@exemplo.com"
+							required
+							aria-invalid={field.state.meta.errors.length > 0}
+							className="h-11 rounded-xl border-border bg-background px-3.5 shadow-none transition-[border-color,box-shadow] placeholder:text-muted-foreground/70 focus-visible:ring-4 focus-visible:ring-ring/15"
+							value={field.state.value}
+							onBlur={field.handleBlur}
+							onChange={(e) => field.handleChange(e.target.value)}
+						/>
+						{field.state.meta.errors.map((error) => (
+							<p key={error?.message} className="text-destructive text-sm">
+								{error?.message}
+							</p>
+						))}
+					</div>
+				)}
+			</form.Field>
 
-			<form
-				onSubmit={(e) => {
-					e.preventDefault();
-					e.stopPropagation();
-					form.handleSubmit();
-				}}
-				className="space-y-4"
+			<form.Field name="password">
+				{(field) => (
+					<div className="space-y-2">
+						<Label htmlFor={field.name}>Senha</Label>
+						<Input
+							id={field.name}
+							name={field.name}
+							type="password"
+							autoComplete="current-password"
+							placeholder="Sua senha"
+							required
+							aria-invalid={field.state.meta.errors.length > 0}
+							className="h-11 rounded-xl border-border bg-background px-3.5 shadow-none transition-[border-color,box-shadow] placeholder:text-muted-foreground/70 focus-visible:ring-4 focus-visible:ring-ring/15"
+							value={field.state.value}
+							onBlur={field.handleBlur}
+							onChange={(e) => field.handleChange(e.target.value)}
+						/>
+						{field.state.meta.errors.map((error) => (
+							<p key={error?.message} className="text-destructive text-sm">
+								{error?.message}
+							</p>
+						))}
+					</div>
+				)}
+			</form.Field>
+
+			<form.Subscribe
+				selector={(state) => ({
+					canSubmit: state.canSubmit,
+					isSubmitting: state.isSubmitting,
+				})}
 			>
-				<div>
-					<form.Field name="email">
-						{(field) => (
-							<div className="space-y-2">
-								<Label htmlFor={field.name}>Email</Label>
-								<Input
-									id={field.name}
-									name={field.name}
-									type="email"
-									value={field.state.value}
-									onBlur={field.handleBlur}
-									onChange={(e) => field.handleChange(e.target.value)}
-								/>
-								{field.state.meta.errors.map((error) => (
-									<p key={error?.message} className="text-red-500">
-										{error?.message}
-									</p>
-								))}
-							</div>
-						)}
-					</form.Field>
-				</div>
-
-				<div>
-					<form.Field name="password">
-						{(field) => (
-							<div className="space-y-2">
-								<Label htmlFor={field.name}>Password</Label>
-								<Input
-									id={field.name}
-									name={field.name}
-									type="password"
-									value={field.state.value}
-									onBlur={field.handleBlur}
-									onChange={(e) => field.handleChange(e.target.value)}
-								/>
-								{field.state.meta.errors.map((error) => (
-									<p key={error?.message} className="text-red-500">
-										{error?.message}
-									</p>
-								))}
-							</div>
-						)}
-					</form.Field>
-				</div>
-
-				<form.Subscribe
-					selector={(state) => ({
-						canSubmit: state.canSubmit,
-						isSubmitting: state.isSubmitting,
-					})}
-				>
-					{({ canSubmit, isSubmitting }) => (
-						<Button
-							type="submit"
-							className="w-full"
-							disabled={!canSubmit || isSubmitting}
-						>
-							{isSubmitting ? "Submitting..." : "Sign In"}
-						</Button>
-					)}
-				</form.Subscribe>
-			</form>
-
-			<div className="mt-4 text-center">
-				<Button
-					variant="link"
-					onClick={onSwitchToSignUp}
-					className="text-indigo-600 hover:text-indigo-800"
-				>
-					Need an account? Sign Up
-				</Button>
-			</div>
-		</div>
+				{({ canSubmit, isSubmitting }) => (
+					<Button
+						type="submit"
+						size="lg"
+						className="h-11 w-full rounded-full bg-primary text-primary-foreground transition-transform hover:bg-primary/85 active:scale-[0.99]"
+						disabled={!canSubmit || isSubmitting}
+					>
+						{isSubmitting ? "Entrando…" : "Entrar"}
+					</Button>
+				)}
+			</form.Subscribe>
+		</form>
 	);
 }

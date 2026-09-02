@@ -8,6 +8,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "turbo dev",
+		"dev:remote": "node tools/ngrok-dev.mjs",
 		"build": "turbo build",
 		"check-types": "turbo check-types",
 		"dev:web": "turbo -F web dev",

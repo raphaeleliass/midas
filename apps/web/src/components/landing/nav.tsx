@@ -1,68 +1,72 @@
 "use client";
 
-import { motion, useMotionValueEvent, useScroll } from "motion/react";
+import { Button } from "@midas/ui/components/button";
+import {
+	motion,
+	useMotionValueEvent,
+	useReducedMotion,
+	useScroll,
+} from "motion/react";
 import Link from "next/link";
 import { useState } from "react";
+
+const NAV_ITEMS = [
+	{ href: "#product", label: "Produto" },
+	{ href: "#features", label: "Recursos" },
+];
 
 export function LandingNav() {
 	const [scrolled, setScrolled] = useState(false);
 	const { scrollY } = useScroll();
+	const reduceMotion = useReducedMotion();
 
-	useMotionValueEvent(scrollY, "change", (y) => {
-		setScrolled(y > 40);
+	useMotionValueEvent(scrollY, "change", (value) => {
+		setScrolled(value > 32);
 	});
 
 	return (
 		<motion.header
-			className="fixed top-0 right-0 left-0 z-50"
-			style={{
-				backdropFilter: scrolled ? "blur(20px)" : "blur(0px)",
-				backgroundColor: scrolled ? "rgba(9,9,11,0.8)" : "transparent",
-				borderBottom: scrolled
-					? "1px solid rgba(255,255,255,0.06)"
-					: "1px solid transparent",
-				transition:
-					"backdrop-filter 0.4s ease, background-color 0.4s ease, border-color 0.4s ease",
+			className="fixed inset-x-0 top-0 z-50 border-b"
+			animate={{
+				backgroundColor: scrolled
+					? "color-mix(in oklch, var(--background) 92%, transparent)"
+					: "color-mix(in oklch, var(--background) 0%, transparent)",
+				borderColor: scrolled ? "var(--border)" : "transparent",
+				backdropFilter: scrolled ? "blur(18px)" : "blur(0px)",
 			}}
+			transition={{ duration: reduceMotion ? 0 : 0.28, ease: "easeOut" }}
 		>
-			<div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-				<Link href="/" className="flex select-none items-center gap-1">
-					<span className="bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text font-black text-2xl text-transparent">
-						M
-					</span>
-					<span className="font-semibold text-white text-xl">idas</span>
+			<div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-10">
+				<Link
+					href="/"
+					className="rounded-sm font-semibold text-lg tracking-[-0.04em] outline-none focus-visible:ring-2 focus-visible:ring-ring"
+				>
+					Midas
 				</Link>
 
-				<nav className="hidden items-center gap-8 md:flex">
-					{[
-						{ href: "#features", label: "Features" },
-						{ href: "#how-it-works", label: "How it works" },
-					].map(({ href, label }) => (
+				<nav
+					aria-label="Navegação principal"
+					className="hidden items-center gap-7 md:flex"
+				>
+					{NAV_ITEMS.map((item) => (
 						<a
-							key={href}
-							href={href}
-							className="text-sm text-zinc-400 transition-colors hover:text-white"
+							key={item.href}
+							href={item.href}
+							className="rounded-sm text-muted-foreground text-sm transition-colors duration-200 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 						>
-							{label}
+							{item.label}
 						</a>
 					))}
 				</nav>
 
-				<div className="flex items-center gap-3">
-					<Link
-						href="/login"
-						className="text-sm text-zinc-400 transition-colors hover:text-white"
+				<div className="flex items-center gap-2">
+					<Button
+						variant="ghost"
+						nativeButton={false}
+						render={<Link href="/login" />}
 					>
-						Sign in
-					</Link>
-					<motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
-						<Link
-							href="/login"
-							className="rounded-full bg-gradient-to-r from-amber-400 to-yellow-300 px-4 py-2 font-semibold text-black text-sm transition-opacity hover:opacity-90"
-						>
-							Get Started
-						</Link>
-					</motion.div>
+						Entrar
+					</Button>
 				</div>
 			</div>
 		</motion.header>

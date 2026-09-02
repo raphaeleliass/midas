@@ -13,7 +13,12 @@ export class CategoriesRepository {
 	create = async (data: TCreateCategory, userId: string) => {
 		const [newCategory] = await this.db
 			.insert(category)
-			.values({ userId, ...data })
+			.values({
+				userId,
+				name: data.name,
+				icon: data.icon,
+				color: data.color,
+			})
 			.returning();
 
 		return newCategory ?? null;
@@ -35,9 +40,14 @@ export class CategoriesRepository {
 	};
 
 	update = async (id: string, userId: string, data: TUpdateCategory) => {
+		const updates = {
+			...(data.name !== undefined && { name: data.name }),
+			...(data.icon !== undefined && { icon: data.icon }),
+			...(data.color !== undefined && { color: data.color }),
+		};
 		const [updated] = await this.db
 			.update(category)
-			.set(data)
+			.set(updates)
 			.where(and(eq(category.id, id), eq(category.userId, userId)))
 			.returning();
 

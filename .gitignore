@@ -47,8 +47,10 @@ lerna-debug.log*
 # Testing
 coverage
 .nyc_output
+.playwright-mcp/
 
 # Misc
+.superpowers/
 *.tgz
 .cache
 tmp

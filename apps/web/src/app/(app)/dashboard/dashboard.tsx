@@ -6,7 +6,7 @@ import { motion } from "motion/react";
 import { useMemo, useState } from "react";
 import { fadeUp, stagger } from "@/lib/animations";
 import { authClient } from "@/lib/auth-client";
-import { useSubscription } from "@/lib/hooks/use-subscription";
+import { useFirstVisit } from "@/lib/hooks/use-first-visit";
 import { useCategories, useDeleteCategory, useEntries } from "@/lib/queries";
 import { AppHeader } from "../app-header";
 import { SummaryCards } from "../summary-cards";
@@ -16,7 +16,7 @@ import { EntryFormDialog } from "../transactions/entry-form-dialog";
 import { ManageCategoriesDialog } from "../transactions/manage-categories-dialog";
 import { BalanceCard } from "./balance-card";
 import { ExpensesByCategoryCard } from "./expenses-by-category-chart";
-import { PremiumInsights } from "./premium-insights";
+import { InsightsCard } from "./insights-card";
 import { RecentTransactionsCard } from "./recent-transactions-card";
 import { SavingsGoalCard } from "./savings-goal-card";
 import { TrendCard } from "./trend-chart";
@@ -24,13 +24,12 @@ import { TrendCard } from "./trend-chart";
 const SAVINGS_GOAL_CENTS = 200_000;
 
 export default function Dashboard() {
+	const isFirstVisit = useFirstVisit("dashboard");
 	const { data: sessionData } = authClient.useSession();
 	const { data: entries = [], isLoading: entriesLoading } = useEntries();
 	const { data: categories = [], isLoading: categoriesLoading } =
 		useCategories();
-	const { data: subscription } = useSubscription();
 	const loading = entriesLoading || categoriesLoading;
-	const isPremium = subscription?.isPremium ?? false;
 	const deleteCategory = useDeleteCategory();
 
 	const [showEntryForm, setShowEntryForm] = useState(false);
@@ -95,7 +94,7 @@ export default function Dashboard() {
 		<div className="relative min-h-full">
 			<motion.div
 				variants={stagger}
-				initial="hidden"
+				initial={isFirstVisit ? "hidden" : "show"}
 				animate="show"
 				className="mx-auto max-w-2xl space-y-4 px-4 pt-4 pb-28 md:px-6 md:pt-6"
 			>
@@ -141,7 +140,7 @@ export default function Dashboard() {
 				</motion.div>
 
 				<motion.div variants={fadeUp}>
-					<PremiumInsights />
+					<InsightsCard />
 				</motion.div>
 			</motion.div>
 
@@ -180,7 +179,6 @@ export default function Dashboard() {
 				open={showManageCategories}
 				onOpenChange={setShowManageCategories}
 				categories={categories}
-				isPremium={isPremium}
 				onEdit={setEditingCategory}
 				onDelete={(id) => deleteCategory.mutate(id)}
 				onNew={() => openCategoryForm("manageCategories")}

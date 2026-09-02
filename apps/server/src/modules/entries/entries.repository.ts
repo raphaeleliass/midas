@@ -1,6 +1,6 @@
 import type { DbType } from "@midas/db";
-import { entry, entryCategory } from "@midas/db";
-import { desc, eq } from "drizzle-orm";
+import { category, entry, entryCategory } from "@midas/db";
+import { and, desc, eq, inArray, isNull, or } from "drizzle-orm";
 import type { TCreateEntry, TUpdateEntry } from "./entries.types";
 
 const withCategories = {
@@ -15,11 +15,18 @@ export class EntriesRepository {
 	}
 
 	create = async (data: TCreateEntry, userId: string) => {
-		const { categoryIds, date, ...rest } = data;
+		const { categoryIds, date, ...entryData } = data;
 
 		const [newEntry] = await this.db
 			.insert(entry)
-			.values({ userId, date: new Date(date), ...rest })
+			.values({
+				userId,
+				date: new Date(date),
+				type: entryData.type,
+				title: entryData.title,
+				subtitle: entryData.subtitle,
+				amountCents: entryData.amountCents,
+			})
 			.returning();
 
 		if (newEntry && categoryIds?.length) {
@@ -52,11 +59,14 @@ export class EntriesRepository {
 	};
 
 	update = async (id: string, data: TUpdateEntry) => {
-		const { categoryIds, date, ...rest } = data;
+		const { categoryIds, date, ...entryData } = data;
 
 		const [updated] = await this.db
 			.update(entry)
-			.set({ ...rest, ...(date !== undefined && { date: new Date(date) }) })
+			.set({
+				...entryData,
+				...(date !== undefined && { date: new Date(date) }),
+			})
 			.where(eq(entry.id, id))
 			.returning();
 
@@ -78,5 +88,16 @@ export class EntriesRepository {
 
 	delete = async (id: string) => {
 		await this.db.delete(entry).where(eq(entry.id, id));
+	};
+
+	countAccessibleCategories = async (userId: string, categoryIds: string[]) => {
+		if (categoryIds.length === 0) return 0;
+		const categories = await this.db.query.category.findMany({
+			where: and(
+				inArray(category.id, categoryIds),
+				or(eq(category.userId, userId), isNull(category.userId)),
+			),
+		});
+		return categories.length;
 	};
 }

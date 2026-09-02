@@ -12,10 +12,6 @@ import { Label } from "@midas/ui/components/label";
 import { cn } from "@midas/ui/lib/utils";
 import { useState } from "react";
 import { CATEGORY_ICONS } from "@/lib/category-icons";
-import {
-	useCreateCheckout,
-	useSubscription,
-} from "@/lib/hooks/use-subscription";
 import { useCreateCategory } from "@/lib/queries";
 
 export function CategoryFormDialog({
@@ -26,11 +22,7 @@ export function CategoryFormDialog({
 	onOpenChange: (open: boolean) => void;
 }) {
 	const createCategory = useCreateCategory();
-	const checkout = useCreateCheckout();
-	const { data: subscription } = useSubscription();
 	const [form, setForm] = useState({ name: "", icon: "" });
-
-	const isPremium = subscription?.isPremium ?? false;
 
 	async function handleSubmit(e: React.FormEvent) {
 		e.preventDefault();
@@ -48,70 +40,52 @@ export function CategoryFormDialog({
 				<DialogHeader>
 					<DialogTitle>Nova categoria</DialogTitle>
 				</DialogHeader>
-				{!isPremium ? (
-					<div className="space-y-3 py-2">
-						<p className="text-muted-foreground text-sm">
-							Criar categorias personalizadas é exclusivo do plano Premium.
-							Assine para organizar seus lançamentos do seu jeito.
-						</p>
-						<Button
-							onClick={() => checkout.mutate()}
-							disabled={checkout.isPending}
-							className="w-full"
-						>
-							{checkout.isPending
-								? "Redirecionando..."
-								: "Assinar Premium — R$ 19,90/mês"}
-						</Button>
+				<form onSubmit={handleSubmit} className="space-y-4">
+					<div className="space-y-1.5">
+						<Label>Nome</Label>
+						<Input
+							value={form.name}
+							onChange={(e) =>
+								setForm((prev) => ({ ...prev, name: e.target.value }))
+							}
+							placeholder="Ex: Alimentação"
+							required
+						/>
 					</div>
-				) : (
-					<form onSubmit={handleSubmit} className="space-y-4">
-						<div className="space-y-1.5">
-							<Label>Nome</Label>
-							<Input
-								value={form.name}
-								onChange={(e) =>
-									setForm((prev) => ({ ...prev, name: e.target.value }))
-								}
-								placeholder="Ex: Alimentação"
-								required
-							/>
+					<div className="space-y-2">
+						<Label>Ícone</Label>
+						<div className="grid grid-cols-6 gap-1.5">
+							{CATEGORY_ICONS.map(({ key, icon: IconComponent, label }) => (
+								<button
+									key={key}
+									type="button"
+									title={label}
+									onClick={() =>
+										setForm((prev) => ({
+											...prev,
+											icon: prev.icon === key ? "" : key,
+										}))
+									}
+									className={cn(
+										"flex h-10 w-10 items-center justify-center rounded-lg border transition-colors",
+										form.icon === key
+											? "border-primary bg-primary/10 text-primary"
+											: "border-border text-muted-foreground hover:border-foreground hover:text-foreground",
+									)}
+								>
+									<IconComponent className="h-4 w-4" />
+								</button>
+							))}
 						</div>
-						<div className="space-y-2">
-							<Label>Ícone</Label>
-							<div className="grid grid-cols-6 gap-1.5">
-								{CATEGORY_ICONS.map(({ key, icon: IconComponent, label }) => (
-									<button
-										key={key}
-										type="button"
-										title={label}
-										onClick={() =>
-											setForm((prev) => ({
-												...prev,
-												icon: prev.icon === key ? "" : key,
-											}))
-										}
-										className={cn(
-											"flex h-10 w-10 items-center justify-center rounded-lg border transition-colors",
-											form.icon === key
-												? "border-primary bg-primary/10 text-primary"
-												: "border-border text-muted-foreground hover:border-foreground hover:text-foreground",
-										)}
-									>
-										<IconComponent className="h-4 w-4" />
-									</button>
-								))}
-							</div>
-						</div>
-						<Button
-							type="submit"
-							className="w-full"
-							disabled={createCategory.isPending}
-						>
-							{createCategory.isPending ? "Salvando..." : "Criar categoria"}
-						</Button>
-					</form>
-				)}
+					</div>
+					<Button
+						type="submit"
+						className="w-full"
+						disabled={createCategory.isPending}
+					>
+						{createCategory.isPending ? "Salvando..." : "Criar categoria"}
+					</Button>
+				</form>
 			</DialogContent>
 		</Dialog>
 	);

@@ -5,7 +5,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@midas/ui/components/dialog";
-import { Lock, Pencil, Plus, Tag, Trash2 } from "lucide-react";
+import { Pencil, Plus, Tag, Trash2 } from "lucide-react";
 import { CategoryIcon } from "@/lib/category-icons";
 import type { Category } from "@/lib/finance";
 
@@ -13,7 +13,6 @@ export function ManageCategoriesDialog({
 	open,
 	onOpenChange,
 	categories,
-	isPremium,
 	onEdit,
 	onDelete,
 	onNew,
@@ -21,7 +20,6 @@ export function ManageCategoriesDialog({
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	categories: Category[];
-	isPremium: boolean;
 	onEdit: (cat: Category) => void;
 	onDelete: (id: string) => void;
 	onNew: () => void;
@@ -81,17 +79,10 @@ export function ManageCategoriesDialog({
 						})
 					)}
 				</div>
-				{isPremium ? (
-					<Button variant="outline" className="w-full" onClick={onNew}>
-						<Plus className="h-4 w-4" />
-						Nova categoria
-					</Button>
-				) : (
-					<Button variant="outline" className="w-full" onClick={onNew}>
-						<Lock className="h-4 w-4" />
-						Nova categoria — Premium
-					</Button>
-				)}
+				<Button variant="outline" className="w-full" onClick={onNew}>
+					<Plus className="h-4 w-4" />
+					Nova categoria
+				</Button>
 			</DialogContent>
 		</Dialog>
 	);

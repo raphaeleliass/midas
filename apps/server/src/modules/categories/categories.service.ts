@@ -9,19 +9,9 @@ type Category = NonNullable<
 >;
 
 export class CategoriesService {
-	constructor(
-		private readonly repository: CategoriesRepository,
-		private readonly checkIsPremium: (userId: string) => Promise<boolean>,
-	) {}
+	constructor(private readonly repository: CategoriesRepository) {}
 
 	create = async (userId: string, data: TCreateCategory) => {
-		const isPremium = await this.checkIsPremium(userId);
-		if (!isPremium) {
-			throw new HTTPException(403, {
-				message: "PREMIUM_REQUIRED",
-			});
-		}
-
 		const result = await this.repository.create(data, userId);
 		await delCache(`categories:${userId}`);
 		return result;

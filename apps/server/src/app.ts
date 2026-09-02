@@ -2,8 +2,10 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import { auth } from "@midas/auth";
 import { env } from "@midas/env/server";
 import { Scalar } from "@scalar/hono-api-reference";
+import { bodyLimit } from "hono/body-limit";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+import { secureHeaders } from "hono/secure-headers";
 import type { HonoVariable } from "./HonoVariable.js";
 import { authMiddleware } from "./middlewares/auth.middleware.js";
 import { errorMiddleware } from "./middlewares/error.middleware.js";
@@ -13,6 +15,14 @@ import { registerRoutes } from "./routes/index.js";
 export const app = new OpenAPIHono<HonoVariable>({ defaultHook: zodErrorHook });
 
 app.use(logger());
+app.use(secureHeaders());
+app.use(
+	"/*",
+	bodyLimit({
+		maxSize: 16 * 1024,
+		onError: (c) => c.json({ error: "Payload too large" }, 413),
+	}),
+);
 app.use(
 	"/*",
 	cors({
@@ -45,8 +55,6 @@ app.use("/entries", authMiddleware);
 app.use("/entries/*", authMiddleware);
 app.use("/categories", authMiddleware);
 app.use("/categories/*", authMiddleware);
-app.use("/billing/checkout", authMiddleware);
-app.use("/billing/status", authMiddleware);
 
 app.onError(errorMiddleware);
 
@@ -70,7 +78,6 @@ app.doc("doc", {
 	tags: [
 		{ name: "Entries", description: "Registro de gastos e receitas" },
 		{ name: "Categories", description: "Categorias de entradas" },
-		{ name: "Billing", description: "Assinatura e status premium" },
 	],
 });
 

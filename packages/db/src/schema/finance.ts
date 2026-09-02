@@ -1,5 +1,6 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
+	check,
 	index,
 	integer,
 	pgTable,
@@ -45,7 +46,11 @@ export const entry = pgTable(
 			.$onUpdate(() => new Date())
 			.notNull(),
 	},
-	(table) => [index("entry_userId_idx").on(table.userId)],
+	(table) => [
+		index("entry_userId_idx").on(table.userId),
+		check("entry_amount_cents_positive", sql`${table.amountCents} > 0`),
+		check("entry_type_allowed", sql`${table.type} in ('expense', 'income')`),
+	],
 );
 
 export const entryCategory = pgTable(

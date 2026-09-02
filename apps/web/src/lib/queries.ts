@@ -93,12 +93,6 @@ export function useDeleteEntry() {
 	});
 }
 
-export class PremiumRequiredError extends Error {
-	constructor() {
-		super("PREMIUM_REQUIRED");
-	}
-}
-
 export function useCreateCategory() {
 	const queryClient = useQueryClient();
 	return useMutation({
@@ -109,12 +103,6 @@ export function useCreateCategory() {
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(data),
 			});
-			if (res.status === 403) {
-				const body = await res.json().catch(() => ({}));
-				if (body?.error === "PREMIUM_REQUIRED") {
-					throw new PremiumRequiredError();
-				}
-			}
 			if (!res.ok) throw new Error("Falha ao criar categoria");
 			return res.json();
 		},
