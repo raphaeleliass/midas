@@ -1,6 +1,4 @@
-import { env } from "@midas/env/web";
-
-export const BASE = env.NEXT_PUBLIC_SERVER_URL;
+export const BASE = "";
 
 export const CHART_COLORS = [
 	"var(--chart-1)",

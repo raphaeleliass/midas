@@ -1,12 +1,11 @@
 import { Geist_Mono, Instrument_Sans } from "next/font/google";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Clarity } from "@/components/landing/clarity";
 import { Closing } from "@/components/landing/closing";
 import { ExperienceDemo } from "@/components/landing/experience-demo";
 import { Hero } from "@/components/landing/hero";
 import { LandingNav } from "@/components/landing/nav";
-import { authClient } from "@/lib/auth-client";
+import { getServerSession } from "@/lib/server-session";
 
 const instrumentSans = Instrument_Sans({
 	subsets: ["latin"],
@@ -21,12 +20,7 @@ const geistMono = Geist_Mono({
 });
 
 export default async function Home() {
-	const requestHeaders = await headers();
-	const { data: session } = await authClient.getSession({
-		fetchOptions: {
-			headers: { cookie: requestHeaders.get("cookie") ?? "" },
-		},
-	});
+	const session = await getServerSession();
 
 	if (session?.user) {
 		redirect("/dashboard");

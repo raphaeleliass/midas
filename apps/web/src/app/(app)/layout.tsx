@@ -1,21 +1,14 @@
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import AppSidebar from "@/components/app-sidebar";
 import BottomNav from "@/components/bottom-nav";
-import { authClient } from "@/lib/auth-client";
+import { getServerSession } from "@/lib/server-session";
 
 export default async function AppLayout({
 	children,
 }: {
 	children: React.ReactNode;
 }) {
-	const requestHeaders = await headers();
-	const session = await authClient.getSession({
-		fetchOptions: {
-			headers: { cookie: requestHeaders.get("cookie") ?? "" },
-			throw: true,
-		},
-	});
+	const session = await getServerSession();
 
 	if (!session?.user) {
 		redirect("/login");
