@@ -6,7 +6,7 @@ export const zodErrorHook: Hook<ZodType, HonoVariable, string, unknown> = (
 	result,
 	c,
 ) => {
-	if (!result.success) {
+	if ("error" in result) {
 		const errors = result.error.issues.map((issue) => ({
 			field: issue.path.join("."),
 			message: issue.message,
