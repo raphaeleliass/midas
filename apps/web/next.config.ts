@@ -1,5 +1,7 @@
-import "@midas/env/web";
+import { env } from "@midas/env/web";
 import type { NextConfig } from "next";
+
+const serverUrl = env.NEXT_PUBLIC_SERVER_URL.replace(/\/$/, "");
 
 const nextConfig: NextConfig = {
 	allowedDevOrigins: ["192.168.1.5", "*.ngrok-free.app"],
@@ -7,15 +9,23 @@ const nextConfig: NextConfig = {
 		return [
 			{
 				source: "/api/:path*",
-				destination: "http://localhost:3000/api/:path*",
+				destination: `${serverUrl}/api/:path*`,
+			},
+			{
+				source: "/entries",
+				destination: `${serverUrl}/entries`,
 			},
 			{
 				source: "/entries/:path*",
-				destination: "http://localhost:3000/entries/:path*",
+				destination: `${serverUrl}/entries/:path*`,
+			},
+			{
+				source: "/categories",
+				destination: `${serverUrl}/categories`,
 			},
 			{
 				source: "/categories/:path*",
-				destination: "http://localhost:3000/categories/:path*",
+				destination: `${serverUrl}/categories/:path*`,
 			},
 		];
 	},

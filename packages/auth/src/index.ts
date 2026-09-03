@@ -76,15 +76,6 @@ export function createAuth() {
 		baseURL: env.BETTER_AUTH_URL,
 		advanced: {
 			useSecureCookies,
-			...(isProduction
-				? {
-						defaultCookieAttributes: {
-							sameSite: "none" as const,
-							secure: true,
-							httpOnly: true,
-						},
-					}
-				: {}),
 		},
 		...(secondaryStorage ? { secondaryStorage } : {}),
 		plugins: [admin()],
