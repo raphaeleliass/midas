@@ -1,7 +1,12 @@
 import { env } from "@midas/env/web";
 import type { NextConfig } from "next";
 
-const serverUrl = env.NEXT_PUBLIC_SERVER_URL.replace(/\/$/, "");
+// The browser reaches Next through ngrok in remote development, but Next should
+// proxy API requests straight to the local server to avoid a tunnel loop.
+const serverUrl =
+	process.env.NODE_ENV === "development"
+		? "http://127.0.0.1:3000"
+		: env.NEXT_PUBLIC_SERVER_URL.replace(/\/$/, "");
 
 const nextConfig: NextConfig = {
 	allowedDevOrigins: ["192.168.1.5", "*.ngrok-free.app"],
