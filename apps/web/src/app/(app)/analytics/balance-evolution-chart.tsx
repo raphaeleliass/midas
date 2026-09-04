@@ -14,12 +14,7 @@ import {
 } from "@midas/ui/components/chart";
 import { Skeleton } from "@midas/ui/components/skeleton";
 import { Area, AreaChart, CartesianGrid, ReferenceLine, XAxis } from "recharts";
-
-type MonthData = {
-	month: string;
-	income: number;
-	expense: number;
-};
+import type { PeriodData } from "@/lib/finance";
 
 const chartConfig = {
 	balance: { label: "Saldo", color: "var(--color-primary)" },
@@ -27,13 +22,15 @@ const chartConfig = {
 
 export function BalanceEvolutionChart({
 	data,
+	periodLabel,
 	loading,
 }: {
-	data: MonthData[];
+	data: PeriodData[];
+	periodLabel: string;
 	loading: boolean;
 }) {
 	const chartData = data.map((d) => ({
-		month: d.month,
+		label: d.label,
 		balance: (d.income - d.expense) / 100,
 	}));
 
@@ -46,7 +43,7 @@ export function BalanceEvolutionChart({
 					<CardTitle className="font-semibold text-sm">
 						Evolução do Saldo
 					</CardTitle>
-					<p className="text-[11px] text-muted-foreground">Últimos 6 meses</p>
+					<p className="text-[11px] text-muted-foreground">{periodLabel}</p>
 				</div>
 			</CardHeader>
 			<CardContent>
@@ -78,7 +75,7 @@ export function BalanceEvolutionChart({
 								strokeOpacity={0.06}
 							/>
 							<XAxis
-								dataKey="month"
+								dataKey="label"
 								axisLine={false}
 								tickLine={false}
 								tick={{ fontSize: 11, fill: "currentColor", opacity: 0.4 }}

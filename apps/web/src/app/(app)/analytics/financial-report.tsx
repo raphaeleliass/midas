@@ -6,8 +6,13 @@ import {
 	Text,
 	View,
 } from "@react-pdf/renderer";
-import type { Entry } from "@/lib/finance";
-import type { Period } from "./period-selector";
+import {
+	buildPeriodSeries,
+	type Entry,
+	filterEntriesByPeriod,
+	getPeriodLabel,
+	type Period,
+} from "@/lib/finance";
 
 Font.register({
 	family: "Midas Report",
@@ -20,12 +25,6 @@ Font.register({
 type CategoryTotal = {
 	name: string;
 	total: number;
-};
-
-type MonthTotal = {
-	label: string;
-	income: number;
-	expense: number;
 };
 
 const styles = StyleSheet.create({
@@ -161,30 +160,6 @@ function formatCurrency(cents: number) {
 	}).format(cents / 100);
 }
 
-function getPeriodLabel(period: Period) {
-	const now = new Date();
-	if (period === "week") return "Últimos 7 dias";
-	if (period === "year") return `Ano de ${now.getFullYear()}`;
-	return now.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
-}
-
-function getPeriodEntries(entries: Entry[], period: Period) {
-	const now = new Date();
-	if (period === "week") {
-		const cutoff = new Date(now);
-		cutoff.setDate(now.getDate() - 7);
-		return entries.filter((entry) => new Date(entry.date) >= cutoff);
-	}
-	if (period === "year") {
-		return entries.filter((entry) =>
-			entry.date.startsWith(now.getFullYear().toString()),
-		);
-	}
-	return entries.filter((entry) =>
-		entry.date.startsWith(now.toISOString().slice(0, 7)),
-	);
-}
-
 function getCategories(entries: Entry[]): CategoryTotal[] {
 	const totals = new Map<string, number>();
 	for (const entry of entries) {
@@ -197,29 +172,6 @@ function getCategories(entries: Entry[]): CategoryTotal[] {
 		.sort((a, b) => b.total - a.total);
 }
 
-function getLastSixMonths(entries: Entry[]): MonthTotal[] {
-	return Array.from({ length: 6 }, (_, index) => {
-		const date = new Date();
-		date.setMonth(date.getMonth() - (5 - index));
-		const prefix = date.toISOString().slice(0, 7);
-		const monthEntries = entries.filter((entry) =>
-			entry.date.startsWith(prefix),
-		);
-		return {
-			label: date.toLocaleDateString("pt-BR", {
-				month: "long",
-				year: "numeric",
-			}),
-			income: monthEntries
-				.filter((entry) => entry.type === "income")
-				.reduce((total, entry) => total + entry.amountCents, 0),
-			expense: monthEntries
-				.filter((entry) => entry.type === "expense")
-				.reduce((total, entry) => total + entry.amountCents, 0),
-		};
-	});
-}
-
 export function FinancialReportDocument({
 	entries,
 	period,
@@ -227,7 +179,7 @@ export function FinancialReportDocument({
 	entries: Entry[];
 	period: Period;
 }) {
-	const periodEntries = getPeriodEntries(entries, period);
+	const periodEntries = filterEntriesByPeriod(entries, period);
 	const income = periodEntries
 		.filter((entry) => entry.type === "income")
 		.reduce((total, entry) => total + entry.amountCents, 0);
@@ -236,7 +188,7 @@ export function FinancialReportDocument({
 		.reduce((total, entry) => total + entry.amountCents, 0);
 	const balance = income - expense;
 	const categories = getCategories(periodEntries);
-	const months = getLastSixMonths(entries);
+	const series = buildPeriodSeries(entries, period);
 	const issuedAt = new Date().toLocaleDateString("pt-BR", {
 		day: "2-digit",
 		month: "long",
@@ -307,24 +259,24 @@ export function FinancialReportDocument({
 
 			<Page size="A4" style={styles.page}>
 				<Text style={styles.sectionLabel}>Histórico</Text>
-				<Text style={styles.sectionTitle}>Evolução dos últimos 6 meses</Text>
+				<Text style={styles.sectionTitle}>Evolução do período</Text>
 				<View style={styles.monthHeader}>
-					<Text style={styles.monthLabel}>MÊS</Text>
+					<Text style={styles.monthLabel}>PERÍODO</Text>
 					<Text style={styles.monthValue}>RECEITAS</Text>
 					<Text style={styles.monthValue}>DESPESAS</Text>
 					<Text style={styles.monthBalance}>SALDO</Text>
 				</View>
-				{months.map((month) => (
-					<View key={month.label} style={styles.monthRow}>
-						<Text style={styles.monthLabel}>{month.label}</Text>
+				{series.map((point) => (
+					<View key={point.label} style={styles.monthRow}>
+						<Text style={styles.monthLabel}>{point.label}</Text>
 						<Text style={styles.monthValue}>
-							{formatCurrency(month.income)}
+							{formatCurrency(point.income)}
 						</Text>
 						<Text style={styles.monthValue}>
-							{formatCurrency(month.expense)}
+							{formatCurrency(point.expense)}
 						</Text>
 						<Text style={styles.monthBalance}>
-							{formatCurrency(month.income - month.expense)}
+							{formatCurrency(point.income - point.expense)}
 						</Text>
 					</View>
 				))}

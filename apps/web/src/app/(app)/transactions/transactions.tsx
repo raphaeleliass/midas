@@ -3,9 +3,14 @@
 import { Button } from "@midas/ui/components/button";
 import { Plus } from "lucide-react";
 import { motion } from "motion/react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { fadeUp, stagger } from "@/lib/animations";
-import type { Entry } from "@/lib/finance";
+import {
+	type Entry,
+	filterEntriesByPeriod,
+	formatMonth,
+	getMonthKey,
+} from "@/lib/finance";
 import { useFirstVisit } from "@/lib/hooks/use-first-visit";
 import {
 	useCategories,
@@ -20,6 +25,8 @@ import { EditCategoryDialog } from "./edit-category-dialog";
 import { EditEntryDialog } from "./edit-entry-dialog";
 import { EntryFormDialog } from "./entry-form-dialog";
 import { ManageCategoriesDialog } from "./manage-categories-dialog";
+
+import { MonthSelector } from "./month-selector";
 import { TransactionList } from "./transaction-list";
 
 type CategoryFormSource = "entryForm" | "editEntry" | "manageCategories" | null;
@@ -45,6 +52,7 @@ export default function Transactions() {
 	const [savedEditingEntry, setSavedEditingEntry] = useState<Entry | null>(
 		null,
 	);
+	const [selectedMonth, setSelectedMonth] = useState(() => getMonthKey());
 
 	function openCategoryForm(source: CategoryFormSource) {
 		setCategoryFormSource(source);
@@ -70,8 +78,21 @@ export default function Transactions() {
 		}
 	}
 
-	const currentMonth = new Date().toISOString().slice(0, 7);
-	const monthEntries = entries.filter((e) => e.date.startsWith(currentMonth));
+	const availableMonths = useMemo(
+		() =>
+			[
+				...new Set([
+					getMonthKey(),
+					...entries.map((entry) => getMonthKey(entry.date)),
+				]),
+			].sort((a, b) => b.localeCompare(a)),
+		[entries],
+	);
+	const monthEntries = filterEntriesByPeriod(
+		entries,
+		"month",
+		new Date(`${selectedMonth}-15T12:00:00Z`),
+	);
 	const monthIncome = monthEntries
 		.filter((e) => e.type === "income")
 		.reduce((s, e) => s + e.amountCents, 0);
@@ -90,16 +111,26 @@ export default function Transactions() {
 				<AppHeader title="Transações" />
 
 				<motion.div variants={fadeUp}>
+					<MonthSelector
+						month={selectedMonth}
+						months={availableMonths}
+						onChange={setSelectedMonth}
+					/>
+				</motion.div>
+
+				<motion.div variants={fadeUp}>
 					<SummaryCards
 						income={monthIncome}
 						expense={monthExpense}
 						loading={loading}
+						incomeLabel={`Receitas · ${formatMonth(selectedMonth)}`}
+						expenseLabel={`Despesas · ${formatMonth(selectedMonth)}`}
 					/>
 				</motion.div>
 
 				<motion.div variants={fadeUp}>
 					<TransactionList
-						entries={entries}
+						entries={monthEntries}
 						loading={loading}
 						onAddEntry={() => setShowEntryForm(true)}
 						onEdit={setEditingEntry}

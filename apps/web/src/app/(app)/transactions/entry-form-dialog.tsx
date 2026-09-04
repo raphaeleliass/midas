@@ -25,10 +25,18 @@ import {
 } from "@midas/ui/components/select";
 import { cn } from "@midas/ui/lib/utils";
 import { CalendarIcon, Check, Plus, Settings2 } from "lucide-react";
+import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { CategoryIcon } from "@/lib/category-icons";
-import { applyAmountMask, brlToCents, type Category } from "@/lib/finance";
+import {
+	applyAmountMask,
+	brlToCents,
+	type Category,
+	dateInputToIso,
+	getCalendarDateInput,
+	getTodayInput,
+} from "@/lib/finance";
 import { useCreateEntry } from "@/lib/queries";
 
 const entrySchema = z.object({
@@ -40,6 +48,16 @@ const entrySchema = z.object({
 });
 
 type EntryFormValues = z.infer<typeof entrySchema>;
+
+function getDefaultValues(): EntryFormValues {
+	return {
+		type: "Despesa",
+		title: "",
+		amountBrl: "",
+		date: getTodayInput(),
+		categoryIds: [],
+	};
+}
 
 export function EntryFormDialog({
 	open,
@@ -57,24 +75,22 @@ export function EntryFormDialog({
 	const createEntry = useCreateEntry();
 	const form = useForm<EntryFormValues>({
 		resolver: zodResolver(entrySchema),
-		defaultValues: {
-			type: "Despesa",
-			title: "",
-			amountBrl: "",
-			date: new Date().toISOString().split("T")[0] as string,
-			categoryIds: [],
-		},
+		defaultValues: getDefaultValues(),
 	});
+
+	useEffect(() => {
+		if (open) form.reset(getDefaultValues());
+	}, [form, open]);
 
 	async function handleSubmit(values: EntryFormValues) {
 		await createEntry.mutateAsync({
 			type: values.type === "Despesa" ? "expense" : "income",
 			title: values.title,
 			amountCents: brlToCents(values.amountBrl),
-			date: new Date(`${values.date}T12:00:00`).toISOString(),
+			date: dateInputToIso(values.date),
 			categoryIds: values.categoryIds,
 		});
-		form.reset();
+		form.reset(getDefaultValues());
 		onOpenChange(false);
 	}
 
@@ -143,8 +159,7 @@ export function EntryFormDialog({
 														: undefined
 												}
 												onSelect={(date) =>
-													date &&
-													field.onChange(date.toISOString().slice(0, 10))
+													date && field.onChange(getCalendarDateInput(date))
 												}
 											/>
 										</PopoverContent>

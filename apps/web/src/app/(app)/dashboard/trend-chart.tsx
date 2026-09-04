@@ -15,7 +15,7 @@ import {
 import { Skeleton } from "@midas/ui/components/skeleton";
 import { useMemo } from "react";
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
-import type { Entry } from "@/lib/finance";
+import { buildPeriodSeries, type Entry } from "@/lib/finance";
 
 const chartConfig = {
 	income: {
@@ -30,28 +30,11 @@ const chartConfig = {
 
 function TrendChart({ entries }: { entries: Entry[] }) {
 	const data = useMemo(() => {
-		const today = new Date();
-		return Array.from({ length: 7 }, (_, dayOffset) => {
-			const date = new Date(today);
-			date.setDate(today.getDate() - (6 - dayOffset));
-			const dayStr = date.toISOString().split("T")[0] as string;
-			const dayEntries = entries.filter((entry) =>
-				entry.date.startsWith(dayStr),
-			);
-			const income = dayEntries
-				.filter((entry) => entry.type === "income")
-				.reduce((sum, entry) => sum + entry.amountCents, 0);
-			const expense = dayEntries
-				.filter((entry) => entry.type === "expense")
-				.reduce((sum, entry) => sum + entry.amountCents, 0);
-			return {
-				day: date
-					.toLocaleDateString("pt-BR", { weekday: "short" })
-					.replace(".", ""),
-				income: income / 100,
-				expense: expense / 100,
-			};
-		});
+		return buildPeriodSeries(entries, "week").map((point) => ({
+			day: point.label,
+			income: point.income / 100,
+			expense: point.expense / 100,
+		}));
 	}, [entries]);
 
 	return (

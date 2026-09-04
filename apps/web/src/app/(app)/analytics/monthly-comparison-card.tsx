@@ -14,22 +14,26 @@ import type { CategoryData } from "./expense-distribution-card";
 import { SpendingIncreaseSheet } from "./spending-increase-sheet";
 
 export function MonthlyComparisonCard({
-	currentMonthExpense,
-	lastMonthExpense,
-	currentMonthBarPercentage,
-	lastMonthBarPercentage,
+	periodLabel,
+	previousPeriodLabel,
+	periodExpense,
+	previousPeriodExpense,
+	periodBarPercentage,
+	previousPeriodBarPercentage,
 	expensePercentageChange,
-	currentMonthCategoryData,
-	lastMonthCategoryData,
+	currentPeriodCategoryData,
+	previousPeriodCategoryData,
 	loading,
 }: {
-	currentMonthExpense: number;
-	lastMonthExpense: number;
-	currentMonthBarPercentage: number;
-	lastMonthBarPercentage: number;
+	periodLabel: string;
+	previousPeriodLabel: string;
+	periodExpense: number;
+	previousPeriodExpense: number;
+	periodBarPercentage: number;
+	previousPeriodBarPercentage: number;
 	expensePercentageChange: number;
-	currentMonthCategoryData: CategoryData[];
-	lastMonthCategoryData: CategoryData[];
+	currentPeriodCategoryData: CategoryData[];
+	previousPeriodCategoryData: CategoryData[];
 	loading: boolean;
 }) {
 	const [sheetOpen, setSheetOpen] = useState(false);
@@ -39,7 +43,7 @@ export function MonthlyComparisonCard({
 			<Card>
 				<CardHeader>
 					<CardTitle className="font-semibold text-sm">
-						Comparativo Mensal
+						Comparativo do Período
 					</CardTitle>
 				</CardHeader>
 				<CardContent className="space-y-4">
@@ -54,36 +58,36 @@ export function MonthlyComparisonCard({
 							<div className="space-y-1.5 rounded-xl bg-muted/50 p-4">
 								<div className="flex items-end justify-between">
 									<span className="text-[12px] text-muted-foreground">
-										Mês atual
+										{periodLabel}
 									</span>
 									<span className="font-semibold text-sm tabular-nums">
-										{centsToBrl(currentMonthExpense)}
+										{centsToBrl(periodExpense)}
 									</span>
 								</div>
 								<div className="h-2 w-full overflow-hidden rounded-full bg-muted">
 									<div
 										className="h-full rounded-full bg-foreground transition-all duration-500"
-										style={{ width: `${currentMonthBarPercentage}%` }}
+										style={{ width: `${periodBarPercentage}%` }}
 									/>
 								</div>
 							</div>
 							<div className="space-y-1.5 rounded-xl bg-muted/50 p-4">
 								<div className="flex items-end justify-between">
 									<span className="text-[12px] text-muted-foreground">
-										Mês anterior
+										{previousPeriodLabel}
 									</span>
 									<span className="font-semibold text-muted-foreground text-sm tabular-nums">
-										{centsToBrl(lastMonthExpense)}
+										{centsToBrl(previousPeriodExpense)}
 									</span>
 								</div>
 								<div className="h-2 w-full overflow-hidden rounded-full bg-muted">
 									<div
 										className="h-full rounded-full bg-muted-foreground/40 transition-all duration-500"
-										style={{ width: `${lastMonthBarPercentage}%` }}
+										style={{ width: `${previousPeriodBarPercentage}%` }}
 									/>
 								</div>
 							</div>
-							{lastMonthExpense > 0 && (
+							{previousPeriodExpense > 0 && (
 								<button
 									type="button"
 									onClick={() => setSheetOpen(true)}
@@ -123,15 +127,15 @@ export function MonthlyComparisonCard({
 					)}
 				</CardContent>
 			</Card>
-			{lastMonthExpense > 0 && (
+			{previousPeriodExpense > 0 && (
 				<SpendingIncreaseSheet
 					open={sheetOpen}
 					onOpenChange={setSheetOpen}
-					currentMonthExpense={currentMonthExpense}
-					lastMonthExpense={lastMonthExpense}
+					currentMonthExpense={periodExpense}
+					lastMonthExpense={previousPeriodExpense}
 					expensePercentageChange={expensePercentageChange}
-					currentMonthCategoryData={currentMonthCategoryData}
-					lastMonthCategoryData={lastMonthCategoryData}
+					currentMonthCategoryData={currentPeriodCategoryData}
+					lastMonthCategoryData={previousPeriodCategoryData}
 				/>
 			)}
 		</>

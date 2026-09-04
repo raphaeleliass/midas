@@ -61,37 +61,40 @@ export function RecentTransactionsCard({
 					</p>
 				) : (
 					<ul className="divide-y">
-						{entries.slice(0, 5).map((entry) => {
-							const primaryCategory = entry.entryCategories[0]?.category;
-							return (
-								<li
-									key={entry.id}
-									className="flex items-center gap-3 px-4 py-3"
-								>
-									<EntryIcon entry={entry} />
-									<div className="min-w-0 flex-1">
-										<p className="truncate font-medium text-sm">
-											{entry.title}
-										</p>
-										<p className="text-[11px] text-muted-foreground">
-											{formatDate(entry.date)}
-											{primaryCategory ? ` · ${primaryCategory.name}` : ""}
-										</p>
-									</div>
-									<span
-										className={cn(
-											"shrink-0 font-semibold text-sm tabular-nums",
-											entry.type === "income"
-												? "text-primary"
-												: "text-rose-500 dark:text-rose-400",
-										)}
+						{[...entries]
+							.sort((a, b) => b.date.localeCompare(a.date))
+							.slice(0, 5)
+							.map((entry) => {
+								const primaryCategory = entry.entryCategories[0]?.category;
+								return (
+									<li
+										key={entry.id}
+										className="flex items-center gap-3 px-4 py-3"
 									>
-										{entry.type === "income" ? "+" : "−"}
-										{centsToBrl(entry.amountCents)}
-									</span>
-								</li>
-							);
-						})}
+										<EntryIcon entry={entry} />
+										<div className="min-w-0 flex-1">
+											<p className="truncate font-medium text-sm">
+												{entry.title}
+											</p>
+											<p className="text-[11px] text-muted-foreground">
+												{formatDate(entry.date)}
+												{primaryCategory ? ` · ${primaryCategory.name}` : ""}
+											</p>
+										</div>
+										<span
+											className={cn(
+												"shrink-0 font-semibold text-sm tabular-nums",
+												entry.type === "income"
+													? "text-primary"
+													: "text-rose-500 dark:text-rose-400",
+											)}
+										>
+											{entry.type === "income" ? "+" : "−"}
+											{centsToBrl(entry.amountCents)}
+										</span>
+									</li>
+								);
+							})}
 					</ul>
 				)}
 			</CardContent>

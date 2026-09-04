@@ -30,7 +30,9 @@ import {
 	applyAmountMask,
 	brlToCents,
 	type Category,
+	dateInputToIso,
 	type Entry,
+	getCalendarDateInput,
 } from "@/lib/finance";
 import { useUpdateEntry } from "@/lib/queries";
 
@@ -85,7 +87,7 @@ export function EditEntryDialog({
 			type: form.type,
 			title: form.title,
 			amountCents: brlToCents(form.amountBrl),
-			date: new Date(`${form.date}T12:00:00`).toISOString(),
+			date: dateInputToIso(form.date),
 			categoryIds: form.categoryIds,
 		});
 		onClose();
@@ -143,7 +145,7 @@ export function EditEntryDialog({
 											date &&
 											setForm((prev) => ({
 												...prev,
-												date: date.toISOString().slice(0, 10),
+												date: getCalendarDateInput(date),
 											}))
 										}
 									/>

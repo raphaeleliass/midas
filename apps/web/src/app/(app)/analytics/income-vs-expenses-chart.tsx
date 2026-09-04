@@ -14,12 +14,7 @@ import {
 } from "@midas/ui/components/chart";
 import { Skeleton } from "@midas/ui/components/skeleton";
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
-
-type MonthData = {
-	month: string;
-	income: number;
-	expense: number;
-};
+import type { PeriodData } from "@/lib/finance";
 
 const chartConfig = {
 	income: { label: "Receitas", color: "var(--color-primary)" },
@@ -28,13 +23,15 @@ const chartConfig = {
 
 export function IncomeVsExpensesChart({
 	data,
+	periodLabel,
 	loading,
 }: {
-	data: MonthData[];
+	data: PeriodData[];
+	periodLabel: string;
 	loading: boolean;
 }) {
 	const chartData = data.map((d) => ({
-		month: d.month,
+		label: d.label,
 		income: d.income / 100,
 		expense: d.expense / 100,
 	}));
@@ -46,7 +43,7 @@ export function IncomeVsExpensesChart({
 					<CardTitle className="font-semibold text-sm">
 						Receitas vs Despesas
 					</CardTitle>
-					<p className="text-[11px] text-muted-foreground">Últimos 6 meses</p>
+					<p className="text-[11px] text-muted-foreground">{periodLabel}</p>
 				</div>
 				<div className="flex items-center gap-4">
 					<div className="flex items-center gap-1.5">
@@ -76,7 +73,7 @@ export function IncomeVsExpensesChart({
 								strokeOpacity={0.06}
 							/>
 							<XAxis
-								dataKey="month"
+								dataKey="label"
 								axisLine={false}
 								tickLine={false}
 								tick={{ fontSize: 11, fill: "currentColor", opacity: 0.4 }}

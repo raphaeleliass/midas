@@ -1,4 +1,4 @@
-type Period = "week" | "month" | "year";
+import type { Period } from "@/lib/finance";
 
 const periods: { key: Period; label: string }[] = [
 	{ key: "week", label: "Semana" },
@@ -32,5 +32,3 @@ export function PeriodSelector({
 		</div>
 	);
 }
-
-export type { Period };
