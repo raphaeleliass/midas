@@ -66,6 +66,32 @@ export const entryCategory = pgTable(
 	(table) => [primaryKey({ columns: [table.entryId, table.categoryId] })],
 );
 
+export const monthlyGoal = pgTable(
+	"monthly_goal",
+	{
+		userId: text("user_id")
+			.primaryKey()
+			.references(() => user.id, { onDelete: "cascade" }),
+		expenseTargetCents: integer("expense_target_cents"),
+		incomeTargetCents: integer("income_target_cents"),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		check(
+			"monthly_goal_expense_target_positive",
+			sql`${table.expenseTargetCents} is null or ${table.expenseTargetCents} > 0`,
+		),
+		check(
+			"monthly_goal_income_target_positive",
+			sql`${table.incomeTargetCents} is null or ${table.incomeTargetCents} > 0`,
+		),
+	],
+);
+
 export const entryRelations = relations(entry, ({ one, many }) => ({
 	user: one(user, {
 		fields: [entry.userId],

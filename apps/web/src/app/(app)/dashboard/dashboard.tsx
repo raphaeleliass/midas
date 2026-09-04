@@ -6,8 +6,14 @@ import { motion } from "motion/react";
 import { useMemo, useState } from "react";
 import { fadeUp, stagger } from "@/lib/animations";
 import { authClient } from "@/lib/auth-client";
+import { filterEntriesByPeriod } from "@/lib/finance";
 import { useFirstVisit } from "@/lib/hooks/use-first-visit";
-import { useCategories, useDeleteCategory, useEntries } from "@/lib/queries";
+import {
+	useCategories,
+	useDeleteCategory,
+	useEntries,
+	useMonthlyGoals,
+} from "@/lib/queries";
 import { AppHeader } from "../app-header";
 import { SummaryCards } from "../summary-cards";
 import { CategoryFormDialog } from "../transactions/category-form-dialog";
@@ -17,11 +23,9 @@ import { ManageCategoriesDialog } from "../transactions/manage-categories-dialog
 import { BalanceCard } from "./balance-card";
 import { ExpensesByCategoryCard } from "./expenses-by-category-chart";
 import { InsightsCard } from "./insights-card";
+import { MonthlyGoalsCard } from "./monthly-goals-card";
 import { RecentTransactionsCard } from "./recent-transactions-card";
-import { SavingsGoalCard } from "./savings-goal-card";
 import { TrendCard } from "./trend-chart";
-
-const SAVINGS_GOAL_CENTS = 200_000;
 
 export default function Dashboard() {
 	const isFirstVisit = useFirstVisit("dashboard");
@@ -29,6 +33,7 @@ export default function Dashboard() {
 	const { data: entries = [], isLoading: entriesLoading } = useEntries();
 	const { data: categories = [], isLoading: categoriesLoading } =
 		useCategories();
+	const { data: goals, isLoading: goalsLoading } = useMonthlyGoals();
 	const loading = entriesLoading || categoriesLoading;
 	const deleteCategory = useDeleteCategory();
 
@@ -67,21 +72,13 @@ export default function Dashboard() {
 		.reduce((sum, entry) => sum + entry.amountCents, 0);
 	const balance = totalIncome - totalExpense;
 
-	const currentMonth = new Date().toISOString().slice(0, 7);
-	const monthEntries = entries.filter((entry) =>
-		entry.date.startsWith(currentMonth),
-	);
+	const monthEntries = filterEntriesByPeriod(entries, "month");
 	const monthIncome = monthEntries
 		.filter((entry) => entry.type === "income")
 		.reduce((sum, entry) => sum + entry.amountCents, 0);
 	const monthExpense = monthEntries
 		.filter((entry) => entry.type === "expense")
 		.reduce((sum, entry) => sum + entry.amountCents, 0);
-	const monthBalance = monthIncome - monthExpense;
-	const savingsProgress = Math.min(
-		100,
-		Math.max(0, (monthBalance / SAVINGS_GOAL_CENTS) * 100),
-	);
 
 	const greeting = useMemo(() => {
 		const currentHour = new Date().getHours();
@@ -112,14 +109,17 @@ export default function Dashboard() {
 						income={totalIncome}
 						expense={totalExpense}
 						loading={loading}
+						incomeLabel="Receitas acumuladas"
+						expenseLabel="Despesas acumuladas"
 					/>
 				</motion.div>
 
 				<motion.div variants={fadeUp}>
-					<SavingsGoalCard
-						monthBalance={monthBalance}
-						savingsProgress={savingsProgress}
-						loading={loading}
+					<MonthlyGoalsCard
+						goals={goals}
+						monthExpense={monthExpense}
+						monthIncome={monthIncome}
+						loading={loading || goalsLoading}
 					/>
 				</motion.div>
 
