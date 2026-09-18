@@ -22,6 +22,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { filterTransition } from "@/lib/animations";
 import {
+	capitalizeMonthNames,
 	centsToBrl,
 	type Entry,
 	formatDate,
@@ -37,11 +38,13 @@ function formatDayHeader(iso: string) {
 	const yesterday = new Date();
 	yesterday.setDate(yesterday.getDate() - 1);
 	if (iso === getDateKey(yesterday)) return "Ontem";
-	return date.toLocaleDateString("pt-BR", {
-		weekday: "long",
-		day: "2-digit",
-		month: "short",
-	});
+	return capitalizeMonthNames(
+		date.toLocaleDateString("pt-BR", {
+			weekday: "long",
+			day: "2-digit",
+			month: "short",
+		}),
+	);
 }
 
 export function TransactionList({

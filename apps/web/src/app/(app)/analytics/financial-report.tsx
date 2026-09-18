@@ -8,6 +8,7 @@ import {
 } from "@react-pdf/renderer";
 import {
 	buildPeriodSeries,
+	capitalizeMonthNames,
 	type Entry,
 	filterEntriesByPeriod,
 	getPeriodLabel,
@@ -189,11 +190,13 @@ export function FinancialReportDocument({
 	const balance = income - expense;
 	const categories = getCategories(periodEntries);
 	const series = buildPeriodSeries(entries, period);
-	const issuedAt = new Date().toLocaleDateString("pt-BR", {
-		day: "2-digit",
-		month: "long",
-		year: "numeric",
-	});
+	const issuedAt = capitalizeMonthNames(
+		new Date().toLocaleDateString("pt-BR", {
+			day: "2-digit",
+			month: "long",
+			year: "numeric",
+		}),
+	);
 	const summary =
 		periodEntries.length === 0
 			? "Não há lançamentos no período selecionado. Registre receitas e despesas para que o próximo relatório revele padrões da sua vida financeira."

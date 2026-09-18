@@ -3,7 +3,7 @@
 import { Button } from "@midas/ui/components/button";
 import { Plus } from "lucide-react";
 import { motion } from "motion/react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { fadeUp, stagger } from "@/lib/animations";
 import {
 	type Entry,
@@ -31,6 +31,8 @@ import { TransactionList } from "./transaction-list";
 
 type CategoryFormSource = "entryForm" | "editEntry" | "manageCategories" | null;
 
+const periodStorageKey = "midas:transactions:period";
+
 export default function Transactions() {
 	const isFirstVisit = useFirstVisit("transactions");
 	const { data: entries = [], isLoading: entriesLoading } = useEntries();
@@ -52,7 +54,23 @@ export default function Transactions() {
 	const [savedEditingEntry, setSavedEditingEntry] = useState<Entry | null>(
 		null,
 	);
-	const [selectedMonth, setSelectedMonth] = useState(() => getMonthKey());
+	const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
+
+	useEffect(() => {
+		const savedPeriod = window.sessionStorage.getItem(periodStorageKey);
+		if (
+			savedPeriod &&
+			savedPeriod !== "all" &&
+			/^\d{4}-\d{2}$/.test(savedPeriod)
+		) {
+			setSelectedMonth(savedPeriod);
+		}
+	}, []);
+
+	function handlePeriodChange(month: string | null) {
+		setSelectedMonth(month);
+		window.sessionStorage.setItem(periodStorageKey, month ?? "all");
+	}
 
 	function openCategoryForm(source: CategoryFormSource) {
 		setCategoryFormSource(source);
@@ -88,11 +106,13 @@ export default function Transactions() {
 			].sort((a, b) => b.localeCompare(a)),
 		[entries],
 	);
-	const monthEntries = filterEntriesByPeriod(
-		entries,
-		"month",
-		new Date(`${selectedMonth}-15T12:00:00Z`),
-	);
+	const monthEntries = selectedMonth
+		? filterEntriesByPeriod(
+				entries,
+				"month",
+				new Date(`${selectedMonth}-15T12:00:00Z`),
+			)
+		: entries;
 	const monthIncome = monthEntries
 		.filter((e) => e.type === "income")
 		.reduce((s, e) => s + e.amountCents, 0);
@@ -114,7 +134,7 @@ export default function Transactions() {
 					<MonthSelector
 						month={selectedMonth}
 						months={availableMonths}
-						onChange={setSelectedMonth}
+						onChange={handlePeriodChange}
 					/>
 				</motion.div>
 
@@ -123,8 +143,16 @@ export default function Transactions() {
 						income={monthIncome}
 						expense={monthExpense}
 						loading={loading}
-						incomeLabel={`Receitas · ${formatMonth(selectedMonth)}`}
-						expenseLabel={`Despesas · ${formatMonth(selectedMonth)}`}
+						incomeLabel={
+							selectedMonth
+								? `Receitas · ${formatMonth(selectedMonth)}`
+								: "Receitas acumuladas"
+						}
+						expenseLabel={
+							selectedMonth
+								? `Despesas · ${formatMonth(selectedMonth)}`
+								: "Despesas acumuladas"
+						}
 					/>
 				</motion.div>
 

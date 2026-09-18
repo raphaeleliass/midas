@@ -22,7 +22,6 @@ import { EntryFormDialog } from "../transactions/entry-form-dialog";
 import { ManageCategoriesDialog } from "../transactions/manage-categories-dialog";
 import { BalanceCard } from "./balance-card";
 import { ExpensesByCategoryCard } from "./expenses-by-category-chart";
-import { InsightsCard } from "./insights-card";
 import { MonthlyGoalsCard } from "./monthly-goals-card";
 import { RecentTransactionsCard } from "./recent-transactions-card";
 import { TrendCard } from "./trend-chart";
@@ -137,10 +136,6 @@ export default function Dashboard() {
 
 				<motion.div variants={fadeUp}>
 					<ExpensesByCategoryCard entries={entries} loading={loading} />
-				</motion.div>
-
-				<motion.div variants={fadeUp}>
-					<InsightsCard />
 				</motion.div>
 			</motion.div>
 

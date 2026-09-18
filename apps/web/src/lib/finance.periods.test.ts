@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import {
+	capitalizeMonthNames,
 	type Entry,
 	filterEntriesByPeriod,
 	getDateKey,
@@ -23,3 +24,8 @@ assert.equal(
 	getDateKey(getPreviousPeriodReference("month", september)),
 	"2026-08-03",
 );
+assert.equal(
+	capitalizeMonthNames("16 de setembro de 2026"),
+	"16 de Setembro de 2026",
+);
+assert.equal(capitalizeMonthNames("16 de set."), "16 de Set.");
