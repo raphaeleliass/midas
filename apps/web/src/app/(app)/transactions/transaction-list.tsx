@@ -21,22 +21,30 @@ import { AnimatePresence, motion } from "motion/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { filterTransition } from "@/lib/animations";
-import { centsToBrl, type Entry, formatDate } from "@/lib/finance";
+import {
+	capitalizeMonthNames,
+	centsToBrl,
+	type Entry,
+	formatDate,
+	getDateKey,
+	getTodayInput,
+} from "@/lib/finance";
 import { EntryIcon } from "../entry-icon";
 
 function formatDayHeader(iso: string) {
 	const date = new Date(`${iso}T12:00:00`);
-	const today = new Date();
-	const todayStr = today.toISOString().slice(0, 10);
+	const todayStr = getTodayInput();
 	if (iso === todayStr) return "Hoje";
-	const yesterday = new Date(today);
-	yesterday.setDate(today.getDate() - 1);
-	if (iso === yesterday.toISOString().slice(0, 10)) return "Ontem";
-	return date.toLocaleDateString("pt-BR", {
-		weekday: "long",
-		day: "2-digit",
-		month: "short",
-	});
+	const yesterday = new Date();
+	yesterday.setDate(yesterday.getDate() - 1);
+	if (iso === getDateKey(yesterday)) return "Ontem";
+	return capitalizeMonthNames(
+		date.toLocaleDateString("pt-BR", {
+			weekday: "long",
+			day: "2-digit",
+			month: "short",
+		}),
+	);
 }
 
 export function TransactionList({
@@ -81,7 +89,7 @@ export function TransactionList({
 		);
 		const map = new Map<string, Entry[]>();
 		for (const entry of filtered) {
-			const day = entry.date.slice(0, 10);
+			const day = getDateKey(entry.date);
 			const dayEntries = map.get(day) ?? [];
 			dayEntries.push(entry);
 			map.set(day, dayEntries);

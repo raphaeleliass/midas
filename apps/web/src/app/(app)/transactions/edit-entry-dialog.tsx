@@ -30,7 +30,10 @@ import {
 	applyAmountMask,
 	brlToCents,
 	type Category,
+	capitalizeMonthNames,
+	dateInputToIso,
 	type Entry,
+	getCalendarDateInput,
 } from "@/lib/finance";
 import { useUpdateEntry } from "@/lib/queries";
 
@@ -44,8 +47,8 @@ export function EditEntryDialog({
 	entry: Entry | null;
 	onClose: () => void;
 	categories: Category[];
-	onManageCategories: () => void;
-	onNewCategory: () => void;
+	onManageCategories?: () => void;
+	onNewCategory?: () => void;
 }) {
 	const updateEntry = useUpdateEntry();
 	const [form, setForm] = useState({
@@ -85,7 +88,7 @@ export function EditEntryDialog({
 			type: form.type,
 			title: form.title,
 			amountCents: brlToCents(form.amountBrl),
-			date: new Date(`${form.date}T12:00:00`).toISOString(),
+			date: dateInputToIso(form.date),
 			categoryIds: form.categoryIds,
 		});
 		onClose();
@@ -111,7 +114,9 @@ export function EditEntryDialog({
 								}
 							>
 								<SelectTrigger>
-									<SelectValue />
+									<SelectValue>
+										{form.type === "income" ? "Receita" : "Despesa"}
+									</SelectValue>
 								</SelectTrigger>
 								<SelectContent>
 									<SelectItem value="expense">Despesa</SelectItem>
@@ -125,9 +130,11 @@ export function EditEntryDialog({
 								<PopoverTrigger className="flex h-9 w-full items-center gap-2 rounded-md border border-input bg-transparent px-3 text-left text-sm hover:bg-accent">
 									<CalendarIcon className="h-4 w-4 shrink-0 opacity-50" />
 									{form.date ? (
-										new Date(`${form.date}T12:00:00`).toLocaleDateString(
-											"pt-BR",
-											{ day: "2-digit", month: "long", year: "numeric" },
+										capitalizeMonthNames(
+											new Date(`${form.date}T12:00:00`).toLocaleDateString(
+												"pt-BR",
+												{ day: "2-digit", month: "long", year: "numeric" },
+											),
 										)
 									) : (
 										<span className="text-muted-foreground">Selecionar</span>
@@ -143,7 +150,7 @@ export function EditEntryDialog({
 											date &&
 											setForm((prev) => ({
 												...prev,
-												date: date.toISOString().slice(0, 10),
+												date: getCalendarDateInput(date),
 											}))
 										}
 									/>
@@ -181,7 +188,7 @@ export function EditEntryDialog({
 						<div className="flex items-center justify-between">
 							<Label>Categorias</Label>
 							<div className="flex items-center gap-2">
-								{categories.length > 0 && (
+								{categories.length > 0 && onManageCategories && (
 									<button
 										type="button"
 										onClick={onManageCategories}
@@ -191,14 +198,16 @@ export function EditEntryDialog({
 										Gerenciar
 									</button>
 								)}
-								<button
-									type="button"
-									onClick={onNewCategory}
-									className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
-								>
-									<Plus className="h-3 w-3" />
-									Nova
-								</button>
+								{onNewCategory && (
+									<button
+										type="button"
+										onClick={onNewCategory}
+										className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
+									>
+										<Plus className="h-3 w-3" />
+										Nova
+									</button>
+								)}
 							</div>
 						</div>
 						{categories.length > 0 && (

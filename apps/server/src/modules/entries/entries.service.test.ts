@@ -17,11 +17,13 @@ const entry = {
 };
 
 let created = false;
+const createdStatuses: string[] = [];
 const repository = {
 	countAccessibleCategories: async (_userId: string, categoryIds: string[]) =>
 		categoryIds.includes("foreign-category") ? 0 : categoryIds.length,
-	create: async () => {
+	create: async (_data: unknown, _userId: string, status: string) => {
 		created = true;
+		createdStatuses.push(status);
 		return entry;
 	},
 } as unknown as EntriesRepository;
@@ -48,3 +50,13 @@ await service.create("user-1", {
 	categoryIds: ["owned-category"],
 });
 assert.equal(created, true);
+assert.deepEqual(createdStatuses, ["posted"]);
+
+await service.create("user-1", {
+	type: "income",
+	title: "Futuro",
+	amountCents: 100,
+	date: "2099-09-02T00:00:00.000Z",
+	categoryIds: ["owned-category"],
+});
+assert.deepEqual(createdStatuses, ["posted", "scheduled"]);

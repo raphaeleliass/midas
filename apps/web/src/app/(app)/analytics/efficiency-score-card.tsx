@@ -12,12 +12,12 @@ type TopCategory = { name: string; total: number } | undefined;
 export function EfficiencyScoreCard({
 	efficiencyScore,
 	topCategory,
-	monthIncome,
+	periodIncome,
 	loading,
 }: {
 	efficiencyScore: number;
 	topCategory: TopCategory;
-	monthIncome: number;
+	periodIncome: number;
 	loading: boolean;
 }) {
 	return (
@@ -46,7 +46,7 @@ export function EfficiencyScoreCard({
 									Pontuação de Eficiência
 								</p>
 								<p className="mt-1.5 text-[12px] text-muted-foreground leading-relaxed">
-									Mede quanto das suas receitas do mês você conseguiu poupar.
+									Mede quanto das receitas do período você conseguiu poupar.
 									Calculada como:
 								</p>
 								<p className="mt-2 rounded-md bg-muted px-2.5 py-1.5 font-mono text-[11px]">
@@ -65,7 +65,7 @@ export function EfficiencyScoreCard({
 					<p className="mt-3 text-[12px] text-background/60 leading-relaxed">
 						{topCategory
 							? `Sua maior despesa é "${topCategory.name}" com ${centsToBrl(topCategory.total)} neste período.`
-							: monthIncome === 0
+							: periodIncome === 0
 								? "Adicione receitas para calcular sua pontuação de eficiência."
 								: "Sem despesas neste período. Continue assim!"}
 					</p>

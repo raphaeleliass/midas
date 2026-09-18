@@ -15,17 +15,21 @@ import {
 import { Skeleton } from "@midas/ui/components/skeleton";
 import { useMemo } from "react";
 import { Cell, Pie, PieChart } from "recharts";
-import { CHART_COLORS, centsToBrl, type Entry } from "@/lib/finance";
+import {
+	CHART_COLORS,
+	centsToBrl,
+	type Entry,
+	filterEntriesByPeriod,
+} from "@/lib/finance";
 
 function ExpensesByCategoryChart({ entries }: { entries: Entry[] }) {
 	const data = useMemo(() => {
-		const month = new Date().toISOString().slice(0, 7);
 		const map = new Map<
 			string,
 			{ name: string; icon: string | null; total: number }
 		>();
-		for (const entry of entries.filter(
-			(entry) => entry.type === "expense" && entry.date.startsWith(month),
+		for (const entry of filterEntriesByPeriod(entries, "month").filter(
+			(entry) => entry.type === "expense",
 		)) {
 			const primaryCategory = entry.entryCategories[0]?.category;
 			const key = primaryCategory?.id ?? "__none__";

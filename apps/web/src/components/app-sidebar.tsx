@@ -3,6 +3,7 @@
 import { cn } from "@midas/ui/lib/utils";
 import {
 	ArrowLeftRight,
+	CalendarDays,
 	LayoutDashboard,
 	Settings,
 	TrendingUp,
@@ -15,6 +16,7 @@ import UserMenu from "./user-menu";
 const items = [
 	{ href: "/dashboard", label: "Início", icon: LayoutDashboard },
 	{ href: "/transactions", label: "Transações", icon: ArrowLeftRight },
+	{ href: "/calendar", label: "Calendário", icon: CalendarDays },
 	{ href: "/analytics", label: "Análises", icon: TrendingUp },
 	{ href: "/settings", label: "Configurações", icon: Settings },
 ] as const;

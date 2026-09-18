@@ -1,12 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { checkFirstVisit } from "@/lib/visited-pages";
 
 export function useFirstVisit(page: string): boolean {
-	const [isFirst] = useState(() => {
-		if (typeof window === "undefined") return true;
-		return checkFirstVisit(page);
-	});
+	const [isFirst, setIsFirst] = useState(true);
+	const checkedPage = useRef<string | null>(null);
+
+	useEffect(() => {
+		if (checkedPage.current === page) return;
+		checkedPage.current = page;
+		setIsFirst(checkFirstVisit(page));
+	}, [page]);
+
 	return isFirst;
 }

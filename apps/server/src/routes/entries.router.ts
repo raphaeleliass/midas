@@ -44,6 +44,23 @@ const getEntryRoute = createRoute({
 	},
 });
 
+const calendarEntriesRoute = createRoute({
+	method: "get",
+	path: "/calendar",
+	tags: ["Entries"],
+	summary: "List posted and scheduled entries for one month",
+	security: [{ bearerAuth: [] }],
+	request: {
+		query: z.object({ month: z.string().regex(/^\d{4}-\d{2}$/) }),
+	},
+	responses: {
+		200: {
+			content: { "application/json": { schema: z.array(entrySchema) } },
+			description: "Calendar entries",
+		},
+	},
+});
+
 const createEntryRoute = createRoute({
 	method: "post",
 	path: "/",
@@ -109,6 +126,8 @@ const controller = new EntriesController(service);
 
 // biome-ignore lint/suspicious/noExplicitAny: controller DI pattern incompatible with openapi v1.x strict handler types
 entriesRouter.openapi(listEntriesRoute, controller.getMany as any);
+// biome-ignore lint/suspicious/noExplicitAny: controller DI pattern incompatible with openapi v1.x strict handler types
+entriesRouter.openapi(calendarEntriesRoute, controller.getCalendar as any);
 // biome-ignore lint/suspicious/noExplicitAny: controller DI pattern incompatible with openapi v1.x strict handler types
 entriesRouter.openapi(getEntryRoute, controller.getOne as any);
 // biome-ignore lint/suspicious/noExplicitAny: controller DI pattern incompatible with openapi v1.x strict handler types

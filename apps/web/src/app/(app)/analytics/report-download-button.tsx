@@ -2,8 +2,7 @@
 
 import { FileDown } from "lucide-react";
 import { useState } from "react";
-import type { Entry } from "@/lib/finance";
-import type { Period } from "./period-selector";
+import type { Entry, Period } from "@/lib/finance";
 
 type ReportDownloadButtonProps = {
 	entries: Entry[];

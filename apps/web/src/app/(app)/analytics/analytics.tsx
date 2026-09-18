@@ -3,7 +3,14 @@
 import { motion } from "motion/react";
 import { useMemo, useState } from "react";
 import { fadeUp, stagger } from "@/lib/animations";
-import type { Entry } from "@/lib/finance";
+import {
+	buildPeriodSeries,
+	type Entry,
+	filterEntriesByPeriod,
+	getPeriodLabel,
+	getPreviousPeriodReference,
+	type Period,
+} from "@/lib/finance";
 import { useFirstVisit } from "@/lib/hooks/use-first-visit";
 import { useEntries } from "@/lib/queries";
 import { AppHeader } from "../app-header";
@@ -14,25 +21,10 @@ import { ExpenseDistributionCard } from "./expense-distribution-card";
 import { IncomeVsExpensesChart } from "./income-vs-expenses-chart";
 import { KpiSummaryCards } from "./kpi-summary-cards";
 import { MonthlyComparisonCard } from "./monthly-comparison-card";
-import { type Period, PeriodSelector } from "./period-selector";
+import { PeriodSelector } from "./period-selector";
 import { ReportDownloadButton } from "./report-download-button";
 import { SectionHeader } from "./section-header";
 import { SpendingByWeekdayChart } from "./spending-by-weekday-chart";
-
-function filterByPeriod(entries: Entry[], period: Period): Entry[] {
-	const now = new Date();
-	if (period === "week") {
-		const cutoff = new Date(now);
-		cutoff.setDate(now.getDate() - 7);
-		return entries.filter((entry) => new Date(entry.date) >= cutoff);
-	}
-	if (period === "month") {
-		const prefix = now.toISOString().slice(0, 7);
-		return entries.filter((entry) => entry.date.startsWith(prefix));
-	}
-	const yearPrefix = now.getFullYear().toString();
-	return entries.filter((entry) => entry.date.startsWith(yearPrefix));
-}
 
 function getCategoryBreakdown(entries: Entry[]): CategoryData[] {
 	const map = new Map<
@@ -60,9 +52,19 @@ export default function Analytics() {
 	const [period, setPeriod] = useState<Period>("month");
 
 	const periodEntries = useMemo(
-		() => filterByPeriod(entries, period),
+		() => filterEntriesByPeriod(entries, period),
 		[entries, period],
 	);
+	const previousPeriodReference = useMemo(
+		() => getPreviousPeriodReference(period),
+		[period],
+	);
+	const previousPeriodEntries = useMemo(
+		() => filterEntriesByPeriod(entries, period, previousPeriodReference),
+		[entries, period, previousPeriodReference],
+	);
+	const periodLabel = getPeriodLabel(period);
+	const previousPeriodLabel = getPeriodLabel(period, previousPeriodReference);
 
 	const categoryData = useMemo(
 		() => getCategoryBreakdown(periodEntries),
@@ -84,92 +86,44 @@ export default function Analytics() {
 
 	const netBalance = totalIncome - totalExpense;
 
-	const currentMonthPrefix = new Date().toISOString().slice(0, 7);
-	const lastMonthDate = new Date();
-	lastMonthDate.setMonth(lastMonthDate.getMonth() - 1);
-	const lastMonthPrefix = lastMonthDate.toISOString().slice(0, 7);
-
-	const currentMonthExpense = entries
-		.filter(
-			(entry) =>
-				entry.type === "expense" && entry.date.startsWith(currentMonthPrefix),
-		)
+	const periodExpense = periodEntries
+		.filter((entry) => entry.type === "expense")
+		.reduce((sum, entry) => sum + entry.amountCents, 0);
+	const previousPeriodExpense = previousPeriodEntries
+		.filter((entry) => entry.type === "expense")
 		.reduce((sum, entry) => sum + entry.amountCents, 0);
 
-	const lastMonthExpense = entries
-		.filter(
-			(entry) =>
-				entry.type === "expense" && entry.date.startsWith(lastMonthPrefix),
-		)
-		.reduce((sum, entry) => sum + entry.amountCents, 0);
-
-	const maxExpense = Math.max(currentMonthExpense, lastMonthExpense, 1);
-	const currentMonthBarPercentage = (currentMonthExpense / maxExpense) * 100;
-	const lastMonthBarPercentage = (lastMonthExpense / maxExpense) * 100;
+	const maxExpense = Math.max(periodExpense, previousPeriodExpense, 1);
+	const periodBarPercentage = (periodExpense / maxExpense) * 100;
+	const previousPeriodBarPercentage =
+		(previousPeriodExpense / maxExpense) * 100;
 
 	const expensePercentageChange =
-		lastMonthExpense > 0
-			? ((currentMonthExpense - lastMonthExpense) / lastMonthExpense) * 100
+		previousPeriodExpense > 0
+			? ((periodExpense - previousPeriodExpense) / previousPeriodExpense) * 100
 			: 0;
 
-	const currentMonthCategoryData = useMemo(
-		() =>
-			getCategoryBreakdown(
-				entries.filter((e) => e.date.startsWith(currentMonthPrefix)),
-			),
-		[entries, currentMonthPrefix],
+	const previousPeriodCategoryData = useMemo(
+		() => getCategoryBreakdown(previousPeriodEntries),
+		[previousPeriodEntries],
 	);
-
-	const lastMonthCategoryData = useMemo(
-		() =>
-			getCategoryBreakdown(
-				entries.filter((e) => e.date.startsWith(lastMonthPrefix)),
-			),
-		[entries, lastMonthPrefix],
-	);
-
-	const monthIncome = entries
-		.filter(
-			(entry) =>
-				entry.type === "income" && entry.date.startsWith(currentMonthPrefix),
-		)
-		.reduce((sum, entry) => sum + entry.amountCents, 0);
 
 	const efficiencyScore =
-		monthIncome > 0
+		totalIncome > 0
 			? Math.max(
 					0,
 					Math.min(
 						100,
-						Math.round(
-							((monthIncome - currentMonthExpense) / monthIncome) * 100,
-						),
+						Math.round(((totalIncome - periodExpense) / totalIncome) * 100),
 					),
 				)
 			: 0;
 
 	const topCategory = categoryData[0];
 
-	const last6MonthsData = useMemo(
-		() =>
-			Array.from({ length: 6 }, (_, i) => {
-				const date = new Date();
-				date.setMonth(date.getMonth() - (5 - i));
-				const prefix = date.toISOString().slice(0, 7);
-				const monthEntries = entries.filter((e) => e.date.startsWith(prefix));
-				return {
-					month: date
-						.toLocaleString("pt-BR", { month: "short" })
-						.replace(".", ""),
-					income: monthEntries
-						.filter((e) => e.type === "income")
-						.reduce((s, e) => s + e.amountCents, 0),
-					expense: monthEntries
-						.filter((e) => e.type === "expense")
-						.reduce((s, e) => s + e.amountCents, 0),
-				};
-			}),
-		[entries],
+	const periodSeries = useMemo(
+		() => buildPeriodSeries(entries, period),
+		[entries, period],
 	);
 
 	const spendingByWeekday = useMemo(() => {
@@ -213,7 +167,7 @@ export default function Analytics() {
 				<EfficiencyScoreCard
 					efficiencyScore={efficiencyScore}
 					topCategory={topCategory}
-					monthIncome={monthIncome}
+					periodIncome={totalIncome}
 					loading={loading}
 				/>
 			</motion.div>
@@ -232,22 +186,32 @@ export default function Analytics() {
 			</motion.div>
 
 			<motion.div variants={fadeUp}>
-				<IncomeVsExpensesChart data={last6MonthsData} loading={loading} />
+				<IncomeVsExpensesChart
+					data={periodSeries}
+					periodLabel={periodLabel}
+					loading={loading}
+				/>
 			</motion.div>
 
 			<motion.div variants={fadeUp}>
-				<BalanceEvolutionChart data={last6MonthsData} loading={loading} />
+				<BalanceEvolutionChart
+					data={periodSeries}
+					periodLabel={periodLabel}
+					loading={loading}
+				/>
 			</motion.div>
 
 			<motion.div variants={fadeUp}>
 				<MonthlyComparisonCard
-					currentMonthExpense={currentMonthExpense}
-					lastMonthExpense={lastMonthExpense}
-					currentMonthBarPercentage={currentMonthBarPercentage}
-					lastMonthBarPercentage={lastMonthBarPercentage}
+					periodLabel={periodLabel}
+					previousPeriodLabel={previousPeriodLabel}
+					periodExpense={periodExpense}
+					previousPeriodExpense={previousPeriodExpense}
+					periodBarPercentage={periodBarPercentage}
+					previousPeriodBarPercentage={previousPeriodBarPercentage}
 					expensePercentageChange={expensePercentageChange}
-					currentMonthCategoryData={currentMonthCategoryData}
-					lastMonthCategoryData={lastMonthCategoryData}
+					currentPeriodCategoryData={categoryData}
+					previousPeriodCategoryData={previousPeriodCategoryData}
 					loading={loading}
 				/>
 			</motion.div>

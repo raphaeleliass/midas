@@ -7,10 +7,14 @@ export function SummaryCards({
 	income,
 	expense,
 	loading,
+	incomeLabel = "Receitas",
+	expenseLabel = "Despesas",
 }: {
 	income: number;
 	expense: number;
 	loading: boolean;
+	incomeLabel?: string;
+	expenseLabel?: string;
 }) {
 	return (
 		<div className="grid grid-cols-2 gap-4">
@@ -18,7 +22,9 @@ export function SummaryCards({
 				<CardContent>
 					<div className="mb-1 flex items-center gap-1.5">
 						<ArrowUp className="h-3.5 w-3.5 text-primary" />
-						<span className="text-[11px] text-muted-foreground">Receitas</span>
+						<span className="text-[11px] text-muted-foreground">
+							{incomeLabel}
+						</span>
 					</div>
 					{loading ? (
 						<Skeleton className="h-5 w-24" />
@@ -33,7 +39,9 @@ export function SummaryCards({
 				<CardContent>
 					<div className="mb-1 flex items-center gap-1.5">
 						<ArrowDown className="h-3.5 w-3.5 text-rose-500" />
-						<span className="text-[11px] text-muted-foreground">Despesas</span>
+						<span className="text-[11px] text-muted-foreground">
+							{expenseLabel}
+						</span>
 					</div>
 					{loading ? (
 						<Skeleton className="h-5 w-24" />

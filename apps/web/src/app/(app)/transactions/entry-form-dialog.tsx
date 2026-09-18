@@ -25,10 +25,19 @@ import {
 } from "@midas/ui/components/select";
 import { cn } from "@midas/ui/lib/utils";
 import { CalendarIcon, Check, Plus, Settings2 } from "lucide-react";
+import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { CategoryIcon } from "@/lib/category-icons";
-import { applyAmountMask, brlToCents, type Category } from "@/lib/finance";
+import {
+	applyAmountMask,
+	brlToCents,
+	type Category,
+	capitalizeMonthNames,
+	dateInputToIso,
+	getCalendarDateInput,
+	getTodayInput,
+} from "@/lib/finance";
 import { useCreateEntry } from "@/lib/queries";
 
 const entrySchema = z.object({
@@ -41,40 +50,54 @@ const entrySchema = z.object({
 
 type EntryFormValues = z.infer<typeof entrySchema>;
 
+function getDefaultValues(): EntryFormValues {
+	return {
+		type: "Despesa",
+		title: "",
+		amountBrl: "",
+		date: getTodayInput(),
+		categoryIds: [],
+	};
+}
+
 export function EntryFormDialog({
 	open,
 	onOpenChange,
 	categories,
 	onManageCategories,
 	onNewCategory,
+	defaultDate,
 }: {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	categories: Category[];
-	onManageCategories: () => void;
-	onNewCategory: () => void;
+	onManageCategories?: () => void;
+	onNewCategory?: () => void;
+	defaultDate?: string;
 }) {
 	const createEntry = useCreateEntry();
 	const form = useForm<EntryFormValues>({
 		resolver: zodResolver(entrySchema),
-		defaultValues: {
-			type: "Despesa",
-			title: "",
-			amountBrl: "",
-			date: new Date().toISOString().split("T")[0] as string,
-			categoryIds: [],
-		},
+		defaultValues: getDefaultValues(),
 	});
+
+	useEffect(() => {
+		if (open)
+			form.reset({
+				...getDefaultValues(),
+				date: defaultDate ?? getTodayInput(),
+			});
+	}, [defaultDate, form, open]);
 
 	async function handleSubmit(values: EntryFormValues) {
 		await createEntry.mutateAsync({
 			type: values.type === "Despesa" ? "expense" : "income",
 			title: values.title,
 			amountCents: brlToCents(values.amountBrl),
-			date: new Date(`${values.date}T12:00:00`).toISOString(),
+			date: dateInputToIso(values.date),
 			categoryIds: values.categoryIds,
 		});
-		form.reset();
+		form.reset(getDefaultValues());
 		onOpenChange(false);
 	}
 
@@ -97,7 +120,7 @@ export function EntryFormDialog({
 											id="entry-type"
 											aria-invalid={fieldState.invalid}
 										>
-											<SelectValue />
+											<SelectValue>{field.value}</SelectValue>
 										</SelectTrigger>
 										<SelectContent>
 											<SelectItem value="Despesa">Despesa</SelectItem>
@@ -124,9 +147,14 @@ export function EntryFormDialog({
 										>
 											<CalendarIcon className="h-4 w-4 shrink-0 opacity-50" />
 											{field.value ? (
-												new Date(`${field.value}T12:00:00`).toLocaleDateString(
-													"pt-BR",
-													{ day: "2-digit", month: "long", year: "numeric" },
+												capitalizeMonthNames(
+													new Date(
+														`${field.value}T12:00:00`,
+													).toLocaleDateString("pt-BR", {
+														day: "2-digit",
+														month: "long",
+														year: "numeric",
+													}),
 												)
 											) : (
 												<span className="text-muted-foreground">
@@ -143,8 +171,7 @@ export function EntryFormDialog({
 														: undefined
 												}
 												onSelect={(date) =>
-													date &&
-													field.onChange(date.toISOString().slice(0, 10))
+													date && field.onChange(getCalendarDateInput(date))
 												}
 											/>
 										</PopoverContent>
@@ -204,7 +231,7 @@ export function EntryFormDialog({
 								<div className="flex items-center justify-between">
 									<FieldLabel>Categorias</FieldLabel>
 									<div className="flex items-center gap-2">
-										{categories.length > 0 && (
+										{categories.length > 0 && onManageCategories && (
 											<button
 												type="button"
 												onClick={onManageCategories}
@@ -214,14 +241,16 @@ export function EntryFormDialog({
 												Gerenciar
 											</button>
 										)}
-										<button
-											type="button"
-											onClick={onNewCategory}
-											className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
-										>
-											<Plus className="h-3 w-3" />
-											Nova
-										</button>
+										{onNewCategory && (
+											<button
+												type="button"
+												onClick={onNewCategory}
+												className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
+											>
+												<Plus className="h-3 w-3" />
+												Nova
+											</button>
+										)}
 									</div>
 								</div>
 								{categories.length > 0 && (

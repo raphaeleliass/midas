@@ -1,6 +1,6 @@
 import type { DbType } from "@midas/db";
 import { category, entry, entryCategory } from "@midas/db";
-import { and, desc, eq, inArray, isNull, or } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import type { TCreateEntry, TUpdateEntry } from "./entries.types";
 
 const withCategories = {
@@ -14,7 +14,11 @@ export class EntriesRepository {
 		this.db = db;
 	}
 
-	create = async (data: TCreateEntry, userId: string) => {
+	create = async (
+		data: TCreateEntry,
+		userId: string,
+		status: "posted" | "scheduled",
+	) => {
 		const { categoryIds, date, ...entryData } = data;
 
 		const [newEntry] = await this.db
@@ -26,6 +30,7 @@ export class EntriesRepository {
 				title: entryData.title,
 				subtitle: entryData.subtitle,
 				amountCents: entryData.amountCents,
+				status,
 			})
 			.returning();
 
@@ -52,13 +57,28 @@ export class EntriesRepository {
 
 	findManyByUser = async (userId: string) => {
 		return this.db.query.entry.findMany({
-			where: eq(entry.userId, userId),
+			where: and(eq(entry.userId, userId), eq(entry.status, "posted")),
 			with: withCategories,
 			orderBy: [desc(entry.date)],
 		});
 	};
 
-	update = async (id: string, data: TUpdateEntry) => {
+	findManyByMonth = async (userId: string, month: string) => {
+		return this.db.query.entry.findMany({
+			where: and(
+				eq(entry.userId, userId),
+				sql`to_char(${entry.date} AT TIME ZONE 'America/Sao_Paulo', 'YYYY-MM') = ${month}`,
+			),
+			with: withCategories,
+			orderBy: [asc(entry.date), asc(entry.createdAt)],
+		});
+	};
+
+	update = async (
+		id: string,
+		data: TUpdateEntry,
+		status: "posted" | "scheduled",
+	) => {
 		const { categoryIds, date, ...entryData } = data;
 
 		const [updated] = await this.db
@@ -66,6 +86,7 @@ export class EntriesRepository {
 			.set({
 				...entryData,
 				...(date !== undefined && { date: new Date(date) }),
+				status,
 			})
 			.where(eq(entry.id, id))
 			.returning();
@@ -84,6 +105,20 @@ export class EntriesRepository {
 		}
 
 		return updated;
+	};
+
+	postDueScheduled = async (userId: string) => {
+		return this.db
+			.update(entry)
+			.set({ status: "posted" })
+			.where(
+				and(
+					eq(entry.userId, userId),
+					eq(entry.status, "scheduled"),
+					sql`(${entry.date} AT TIME ZONE 'America/Sao_Paulo')::date <= (now() AT TIME ZONE 'America/Sao_Paulo')::date`,
+				),
+			)
+			.returning({ id: entry.id });
 	};
 
 	delete = async (id: string) => {

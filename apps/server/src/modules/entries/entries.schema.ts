@@ -10,6 +10,7 @@ export const entrySchema = z
 		subtitle: z.string().max(200).nullish(),
 		amountCents: z.number().int().positive(),
 		date: z.date(),
+		status: z.enum(["posted", "scheduled"]),
 		createdAt: z.date(),
 		updatedAt: z.date(),
 		categories: z.array(categorySchema).optional(),
@@ -22,6 +23,7 @@ export const createEntrySchema = entrySchema
 		userId: true,
 		createdAt: true,
 		updatedAt: true,
+		status: true,
 		categories: true,
 		date: true,
 	})
