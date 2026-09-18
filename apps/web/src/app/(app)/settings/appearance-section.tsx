@@ -3,7 +3,7 @@
 import { Card, CardContent } from "@midas/ui/components/card";
 import { cn } from "@midas/ui/lib/utils";
 import { Monitor, Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/theme-provider";
 
 const THEME_OPTIONS = [
 	{ value: "light", label: "Claro", icon: Sun },
