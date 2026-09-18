@@ -32,6 +32,14 @@ const nextConfig: NextConfig = {
 				source: "/categories/:path*",
 				destination: `${serverUrl}/categories/:path*`,
 			},
+			{
+				source: "/goals",
+				destination: `${serverUrl}/goals`,
+			},
+			{
+				source: "/goals/:path*",
+				destination: `${serverUrl}/goals/:path*`,
+			},
 		];
 	},
 	typedRoutes: true,

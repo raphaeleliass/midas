@@ -14,7 +14,12 @@ import { Progress } from "@midas/ui/components/progress";
 import { cn } from "@midas/ui/lib/utils";
 import { Pencil, PiggyBank, Plus } from "lucide-react";
 import { useState } from "react";
-import { applyAmountMask, brlToCents, centsToBrl, type MonthlyGoals } from "@/lib/finance";
+import {
+	applyAmountMask,
+	brlToCents,
+	centsToBrl,
+	type MonthlyGoals,
+} from "@/lib/finance";
 import { useUpdateMonthlyGoals } from "@/lib/queries";
 
 type GoalType = "expense" | "income";
@@ -49,17 +54,32 @@ function GoalRow({
 		<div className="space-y-2">
 			<div className="flex items-center justify-between gap-3">
 				<div>
-					<p className="font-medium text-sm">{isExpense ? "Gastos" : "Receitas"}</p>
+					<p className="font-medium text-sm">
+						{isExpense ? "Gastos" : "Receitas"}
+					</p>
 					{target ? (
-						<p className={cn("text-xs", difference < 0 && isExpense ? "text-destructive" : "text-muted-foreground")}>
+						<p
+							className={cn(
+								"text-xs",
+								difference < 0 && isExpense
+									? "text-destructive"
+									: "text-muted-foreground",
+							)}
+						>
 							{loading ? "—" : status}
 						</p>
 					) : (
-						<p className="text-xs text-muted-foreground">Defina sua meta mensal</p>
+						<p className="text-muted-foreground text-xs">
+							Defina sua meta mensal
+						</p>
 					)}
 				</div>
 				<Button variant="ghost" size="sm" onClick={() => onEdit(type)}>
-					{target ? <Pencil className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+					{target ? (
+						<Pencil className="h-3.5 w-3.5" />
+					) : (
+						<Plus className="h-3.5 w-3.5" />
+					)}
 					<span className="ml-1">{target ? "Editar" : "Criar"}</span>
 				</Button>
 			</div>
@@ -67,7 +87,9 @@ function GoalRow({
 				<>
 					<div className="flex items-center justify-between text-xs tabular-nums">
 						<span>{loading ? "—" : centsToBrl(amount)}</span>
-						<span className="text-muted-foreground">de {centsToBrl(target)}</span>
+						<span className="text-muted-foreground">
+							de {centsToBrl(target)}
+						</span>
 					</div>
 					<Progress
 						value={progress}
@@ -98,18 +120,23 @@ export function MonthlyGoalsCard({
 	const updateGoals = useUpdateMonthlyGoals();
 	const [editing, setEditing] = useState<GoalType | null>(null);
 	const [amount, setAmount] = useState("");
-	const target = editing === "expense" ? goals?.expenseTargetCents : goals?.incomeTargetCents;
+	const target =
+		editing === "expense"
+			? goals?.expenseTargetCents
+			: goals?.incomeTargetCents;
 
 	function openEditor(type: GoalType) {
 		setEditing(type);
-		const current = type === "expense" ? goals?.expenseTargetCents : goals?.incomeTargetCents;
+		const current =
+			type === "expense" ? goals?.expenseTargetCents : goals?.incomeTargetCents;
 		setAmount(current ? applyAmountMask(String(current)) : "");
 	}
 
 	async function save() {
 		if (!editing || brlToCents(amount) <= 0) return;
 		await updateGoals.mutateAsync({
-			[editing === "expense" ? "expenseTargetCents" : "incomeTargetCents"]: brlToCents(amount),
+			[editing === "expense" ? "expenseTargetCents" : "incomeTargetCents"]:
+				brlToCents(amount),
 		});
 		setEditing(null);
 	}
@@ -117,7 +144,8 @@ export function MonthlyGoalsCard({
 	async function remove() {
 		if (!editing) return;
 		await updateGoals.mutateAsync({
-			[editing === "expense" ? "expenseTargetCents" : "incomeTargetCents"]: null,
+			[editing === "expense" ? "expenseTargetCents" : "incomeTargetCents"]:
+				null,
 		});
 		setEditing(null);
 	}
@@ -131,29 +159,91 @@ export function MonthlyGoalsCard({
 							<PiggyBank className="h-4 w-4 text-primary" />
 						</div>
 						<div>
-							<p className="font-medium text-[10px] text-muted-foreground uppercase tracking-[0.1em]">Metas do mês</p>
-							<p className="font-semibold text-sm">Acompanhe seu planejamento</p>
+							<p className="font-medium text-[10px] text-muted-foreground uppercase tracking-[0.1em]">
+								Metas do mês
+							</p>
+							<p className="font-semibold text-sm">
+								Acompanhe seu planejamento
+							</p>
 						</div>
 					</div>
-					<GoalRow type="expense" target={goals?.expenseTargetCents ?? null} amount={monthExpense} loading={loading} onEdit={openEditor} />
-					<GoalRow type="income" target={goals?.incomeTargetCents ?? null} amount={monthIncome} loading={loading} onEdit={openEditor} />
+					<GoalRow
+						type="expense"
+						target={goals?.expenseTargetCents ?? null}
+						amount={monthExpense}
+						loading={loading}
+						onEdit={openEditor}
+					/>
+					<GoalRow
+						type="income"
+						target={goals?.incomeTargetCents ?? null}
+						amount={monthIncome}
+						loading={loading}
+						onEdit={openEditor}
+					/>
 				</CardContent>
 			</Card>
-			<Dialog open={editing !== null} onOpenChange={(open) => !open && setEditing(null)}>
+			<Dialog
+				open={editing !== null}
+				onOpenChange={(open) => !open && setEditing(null)}
+			>
 				<DialogContent className="sm:max-w-sm">
 					<DialogHeader>
-						<DialogTitle>{target ? "Editar" : "Criar"} meta de {editing === "expense" ? "gastos" : "receitas"}</DialogTitle>
+						<DialogTitle>
+							{target ? "Editar" : "Criar"} meta de{" "}
+							{editing === "expense" ? "gastos" : "receitas"}
+						</DialogTitle>
 					</DialogHeader>
-					<form onSubmit={(event) => { event.preventDefault(); save(); }} className="space-y-4">
+					<form
+						onSubmit={(event) => {
+							event.preventDefault();
+							save();
+						}}
+						className="space-y-4"
+					>
 						<div className="space-y-1.5">
 							<Label htmlFor="goal-amount">Valor mensal (R$)</Label>
-							<Input id="goal-amount" value={amount} onChange={(event) => setAmount(applyAmountMask(event.target.value))} placeholder="0,00" inputMode="numeric" autoFocus />
-							{amount && brlToCents(amount) <= 0 && <p className="text-xs text-destructive">Informe um valor maior que zero.</p>}
-							{updateGoals.error && <p className="text-xs text-destructive">Não foi possível salvar a meta. Tente novamente.</p>}
+							<Input
+								id="goal-amount"
+								value={amount}
+								onChange={(event) =>
+									setAmount(applyAmountMask(event.target.value))
+								}
+								placeholder="0,00"
+								inputMode="numeric"
+								autoFocus
+							/>
+							{amount && brlToCents(amount) <= 0 && (
+								<p className="text-destructive text-xs">
+									Informe um valor maior que zero.
+								</p>
+							)}
+							{updateGoals.error && (
+								<p className="text-destructive text-xs">
+									Não foi possível salvar a meta. Tente novamente.
+								</p>
+							)}
 						</div>
 						<div className="flex justify-between gap-2">
-							{target ? <Button type="button" variant="ghost" className="text-destructive hover:text-destructive" onClick={remove} disabled={updateGoals.isPending}>Remover</Button> : <span />}
-							<Button type="submit" disabled={updateGoals.isPending || brlToCents(amount) <= 0}>{updateGoals.isPending ? "Salvando..." : "Salvar meta"}</Button>
+							{target ? (
+								<Button
+									type="button"
+									variant="ghost"
+									className="text-destructive hover:text-destructive"
+									onClick={remove}
+									disabled={updateGoals.isPending}
+								>
+									Remover
+								</Button>
+							) : (
+								<span />
+							)}
+							<Button
+								type="submit"
+								disabled={updateGoals.isPending || brlToCents(amount) <= 0}
+							>
+								{updateGoals.isPending ? "Salvando..." : "Salvar meta"}
+							</Button>
 						</div>
 					</form>
 				</DialogContent>

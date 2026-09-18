@@ -29,7 +29,9 @@ const updateGoalsRoute = createRoute({
 	path: "/",
 	tags: ["Goals"],
 	security: [{ bearerAuth: [] }],
-	request: { body: { content: { "application/json": { schema: updateGoalSchema } } } },
+	request: {
+		body: { content: { "application/json": { schema: updateGoalSchema } } },
+	},
 	responses: {
 		200: {
 			content: { "application/json": { schema: goalSchema } },
