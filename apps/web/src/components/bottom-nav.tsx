@@ -3,6 +3,7 @@
 import { cn } from "@midas/ui/lib/utils";
 import {
 	ArrowLeftRight,
+	CalendarDays,
 	LayoutDashboard,
 	Settings,
 	TrendingUp,
@@ -14,6 +15,7 @@ import { usePathname } from "next/navigation";
 const items = [
 	{ href: "/dashboard", label: "Início", icon: LayoutDashboard },
 	{ href: "/transactions", label: "Transações", icon: ArrowLeftRight },
+	{ href: "/calendar", label: "Calendário", icon: CalendarDays },
 	{ href: "/analytics", label: "Análises", icon: TrendingUp },
 	{ href: "/settings", label: "Config.", icon: Settings },
 ] as const;
@@ -29,7 +31,8 @@ export default function BottomNav() {
 					<Link
 						key={href}
 						href={href}
-						className="relative flex flex-col items-center gap-1 px-3 py-1"
+						prefetch
+						className="relative flex h-full min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1"
 					>
 						<Icon
 							className={cn(

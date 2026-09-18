@@ -33,6 +33,7 @@ import {
 	applyAmountMask,
 	brlToCents,
 	type Category,
+	capitalizeMonthNames,
 	dateInputToIso,
 	getCalendarDateInput,
 	getTodayInput,
@@ -65,12 +66,14 @@ export function EntryFormDialog({
 	categories,
 	onManageCategories,
 	onNewCategory,
+	defaultDate,
 }: {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	categories: Category[];
-	onManageCategories: () => void;
-	onNewCategory: () => void;
+	onManageCategories?: () => void;
+	onNewCategory?: () => void;
+	defaultDate?: string;
 }) {
 	const createEntry = useCreateEntry();
 	const form = useForm<EntryFormValues>({
@@ -79,8 +82,12 @@ export function EntryFormDialog({
 	});
 
 	useEffect(() => {
-		if (open) form.reset(getDefaultValues());
-	}, [form, open]);
+		if (open)
+			form.reset({
+				...getDefaultValues(),
+				date: defaultDate ?? getTodayInput(),
+			});
+	}, [defaultDate, form, open]);
 
 	async function handleSubmit(values: EntryFormValues) {
 		await createEntry.mutateAsync({
@@ -113,7 +120,7 @@ export function EntryFormDialog({
 											id="entry-type"
 											aria-invalid={fieldState.invalid}
 										>
-											<SelectValue />
+											<SelectValue>{field.value}</SelectValue>
 										</SelectTrigger>
 										<SelectContent>
 											<SelectItem value="Despesa">Despesa</SelectItem>
@@ -140,9 +147,14 @@ export function EntryFormDialog({
 										>
 											<CalendarIcon className="h-4 w-4 shrink-0 opacity-50" />
 											{field.value ? (
-												new Date(`${field.value}T12:00:00`).toLocaleDateString(
-													"pt-BR",
-													{ day: "2-digit", month: "long", year: "numeric" },
+												capitalizeMonthNames(
+													new Date(
+														`${field.value}T12:00:00`,
+													).toLocaleDateString("pt-BR", {
+														day: "2-digit",
+														month: "long",
+														year: "numeric",
+													}),
 												)
 											) : (
 												<span className="text-muted-foreground">
@@ -219,7 +231,7 @@ export function EntryFormDialog({
 								<div className="flex items-center justify-between">
 									<FieldLabel>Categorias</FieldLabel>
 									<div className="flex items-center gap-2">
-										{categories.length > 0 && (
+										{categories.length > 0 && onManageCategories && (
 											<button
 												type="button"
 												onClick={onManageCategories}
@@ -229,14 +241,16 @@ export function EntryFormDialog({
 												Gerenciar
 											</button>
 										)}
-										<button
-											type="button"
-											onClick={onNewCategory}
-											className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
-										>
-											<Plus className="h-3 w-3" />
-											Nova
-										</button>
+										{onNewCategory && (
+											<button
+												type="button"
+												onClick={onNewCategory}
+												className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
+											>
+												<Plus className="h-3 w-3" />
+												Nova
+											</button>
+										)}
 									</div>
 								</div>
 								{categories.length > 0 && (

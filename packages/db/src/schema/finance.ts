@@ -40,6 +40,9 @@ export const entry = pgTable(
 		subtitle: text("subtitle"),
 		amountCents: integer("amount_cents").notNull(),
 		date: timestamp("date", { withTimezone: true }).notNull(),
+		status: text("status", { enum: ["posted", "scheduled"] })
+			.default("posted")
+			.notNull(),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at")
 			.defaultNow()
@@ -48,8 +51,17 @@ export const entry = pgTable(
 	},
 	(table) => [
 		index("entry_userId_idx").on(table.userId),
+		index("entry_userId_status_date_idx").on(
+			table.userId,
+			table.status,
+			table.date,
+		),
 		check("entry_amount_cents_positive", sql`${table.amountCents} > 0`),
 		check("entry_type_allowed", sql`${table.type} in ('expense', 'income')`),
+		check(
+			"entry_status_allowed",
+			sql`${table.status} in ('posted', 'scheduled')`,
+		),
 	],
 );
 

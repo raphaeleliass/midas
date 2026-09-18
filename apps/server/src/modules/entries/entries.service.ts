@@ -6,6 +6,22 @@ import type { TCreateEntry, TUpdateEntry } from "./entries.types";
 type EntryList = Awaited<ReturnType<EntriesRepository["findManyByUser"]>>;
 type Entry = NonNullable<Awaited<ReturnType<EntriesRepository["findById"]>>>;
 
+function getEntryStatus(date: string) {
+	const dateKey = new Intl.DateTimeFormat("en-CA", {
+		timeZone: "America/Sao_Paulo",
+		year: "numeric",
+		month: "2-digit",
+		day: "2-digit",
+	}).format(new Date(date));
+	const todayKey = new Intl.DateTimeFormat("en-CA", {
+		timeZone: "America/Sao_Paulo",
+		year: "numeric",
+		month: "2-digit",
+		day: "2-digit",
+	}).format(new Date());
+	return dateKey > todayKey ? "scheduled" : "posted";
+}
+
 export class EntriesService {
 	constructor(private readonly repository: EntriesRepository) {}
 
@@ -26,7 +42,11 @@ export class EntriesService {
 
 	create = async (userId: string, data: TCreateEntry) => {
 		await this.assertAccessibleCategories(userId, data.categoryIds);
-		const result = await this.repository.create(data, userId);
+		const result = await this.repository.create(
+			data,
+			userId,
+			getEntryStatus(data.date),
+		);
 		await delCache(`entries:${userId}`);
 		return result;
 	};
@@ -46,6 +66,7 @@ export class EntriesService {
 	};
 
 	findManyByUser = async (userId: string) => {
+		await this.postDueScheduled(userId);
 		const cacheKey = `entries:${userId}`;
 		const cached = await getCache<EntryList>(cacheKey);
 		if (cached) return cached;
@@ -55,6 +76,11 @@ export class EntriesService {
 		return result;
 	};
 
+	findManyByMonth = async (userId: string, month: string) => {
+		await this.postDueScheduled(userId);
+		return this.repository.findManyByMonth(userId, month);
+	};
+
 	update = async (userId: string, id: string, data: TUpdateEntry) => {
 		const found = await this.repository.findById(id);
 
@@ -62,10 +88,19 @@ export class EntriesService {
 		if (found.userId !== userId) throw new HTTPException(403);
 		await this.assertAccessibleCategories(userId, data.categoryIds);
 
-		const result = await this.repository.update(id, data);
+		const result = await this.repository.update(
+			id,
+			data,
+			data.date ? getEntryStatus(data.date) : found.status,
+		);
 		await delCache(`entries:${userId}`, `entries:${userId}:${id}`);
 		return result;
 	};
+
+	private async postDueScheduled(userId: string) {
+		const posted = await this.repository.postDueScheduled(userId);
+		if (posted.length) await delCache(`entries:${userId}`);
+	}
 
 	delete = async (userId: string, id: string) => {
 		const found = await this.repository.findById(id);

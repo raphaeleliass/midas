@@ -22,10 +22,12 @@ export type Category = {
 export type Entry = {
 	id: string;
 	type: "expense" | "income";
+	status: "posted" | "scheduled";
 	title: string;
 	subtitle: string | null;
 	amountCents: number;
 	date: string;
+	createdAt: string;
 	entryCategories: {
 		entryId: string;
 		categoryId: string;
@@ -43,6 +45,13 @@ export type PeriodData = {
 	income: number;
 	expense: number;
 };
+
+export function capitalizeMonthNames(value: string) {
+	return value.replace(
+		/\b(janeiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro|jan\.|fev\.|mar\.|abr\.|mai\.|jun\.|jul\.|ago\.|set\.|out\.|nov\.|dez\.)/gu,
+		(month) => month[0]?.toUpperCase() + month.slice(1),
+	);
+}
 
 function formatDatePart(date: Date, options: Intl.DateTimeFormatOptions) {
 	return new Intl.DateTimeFormat("en-CA", {
@@ -93,11 +102,13 @@ export function dateInputToIso(value: string) {
 }
 
 export function formatMonth(key: string) {
-	return dateFromKey(`${key}-01`).toLocaleDateString("pt-BR", {
-		timeZone: "UTC",
-		month: "long",
-		year: "numeric",
-	});
+	return capitalizeMonthNames(
+		dateFromKey(`${key}-01`).toLocaleDateString("pt-BR", {
+			timeZone: "UTC",
+			month: "long",
+			year: "numeric",
+		}),
+	);
 }
 
 export function getPeriodLabel(period: Period, reference = new Date()) {
@@ -224,9 +235,11 @@ export function applyAmountMask(input: string): string {
 }
 
 export function formatDate(iso: string) {
-	return new Date(iso).toLocaleDateString("pt-BR", {
-		timeZone: FINANCE_TIME_ZONE,
-		day: "2-digit",
-		month: "short",
-	});
+	return capitalizeMonthNames(
+		new Date(iso).toLocaleDateString("pt-BR", {
+			timeZone: FINANCE_TIME_ZONE,
+			day: "2-digit",
+			month: "short",
+		}),
+	);
 }

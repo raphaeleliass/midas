@@ -21,6 +21,13 @@ export class EntriesController {
 		return c.json(entry);
 	};
 
+	getCalendar = async (c: AppContext) => {
+		const userId = c.get("userId") || "";
+		const month = (c.req.valid("query" as never) as { month: string }).month;
+		const entries = await this.service.findManyByMonth(userId, month);
+		return c.json(entries);
+	};
+
 	create = async (c: AppContext) => {
 		const userId = c.var.userId;
 		if (!userId) return c.json({ error: "Unauthorized" }, 401);
